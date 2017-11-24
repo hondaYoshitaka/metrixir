@@ -14,5 +14,5 @@ public class MetricsCreateForm extends FormBase {
 
     private String event;
 
-    private String clientTime;
+    private Long clientTime;
 }

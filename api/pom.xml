@@ -16,14 +16,14 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
 
-        <enkan.version>0.3.0</enkan.version>
-        <enkan.undertow.version>0.3.0</enkan.undertow.version>
-        <enkan.thymeleaf.version>0.3.0</enkan.thymeleaf.version>
-        <enkan.flyway.version>0.3.0</enkan.flyway.version>
-        <enkan.doma2.version>0.3.0</enkan.doma2.version>
-        <enkan.HikariCP.version>0.3.0</enkan.HikariCP.version>
-        <enkan.jackson.version>0.3.0</enkan.jackson.version>
-        <kotowari.version>0.3.0</kotowari.version>
+        <enkan.version>0.3.2</enkan.version>
+        <enkan.undertow.version>0.3.2</enkan.undertow.version>
+        <enkan.thymeleaf.version>0.3.2</enkan.thymeleaf.version>
+        <enkan.flyway.version>0.3.2</enkan.flyway.version>
+        <enkan.doma2.version>0.3.2</enkan.doma2.version>
+        <enkan.HikariCP.version>0.3.2</enkan.HikariCP.version>
+        <enkan.jackson.version>0.3.2</enkan.jackson.version>
+        <kotowari.version>0.3.2</kotowari.version>
 
         <lombok.version>1.16.18</lombok.version>
         <h2.version>1.4.189</h2.version>
@@ -103,6 +103,13 @@
             <groupId>net.unit8.enkan</groupId>
             <artifactId>enkan-component-thymeleaf</artifactId>
             <version>${enkan.thymeleaf.version}</version>
+        </dependency>
+
+        <!-- For parsing request body -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.jaxrs</groupId>
+            <artifactId>jackson-jaxrs-json-provider</artifactId>
+            <version>2.9.2</version>
         </dependency>
 
         <dependency>
