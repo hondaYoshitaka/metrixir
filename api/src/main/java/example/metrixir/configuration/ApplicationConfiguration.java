@@ -31,10 +31,9 @@ public class ApplicationConfiguration implements enkan.config.ApplicationFactory
         WebApplication app = new WebApplication();
 
         Routes routes = Routes.define(r -> {
-            // public
-            r.get("/api/metrics").to(MetricsController.class, "create");
-//            r.post("/auth/campaign").to(CampaignController.class, "create");
-//            r.get("/auth/user/campaigns").to(CampaignController.class, "listCampaigns");
+            r.scope("/api", api -> {
+                api.post("/metrics").to(MetricsController.class, "create");
+            });
         }).compile();
 
         app.use(new DefaultCharsetMiddleware());
@@ -56,6 +55,7 @@ public class ApplicationConfiguration implements enkan.config.ApplicationFactory
 
         app.use(new AuthenticationMiddleware(Collections.singletonList(new SessionBackend())));
 
+        app.use(new CorsMiddleware());
         app.use(new ResourceMiddleware());
         app.use(new RenderTemplateMiddleware());
         app.use(new RoutingMiddleware(routes));

@@ -1,5 +1,6 @@
 package example.metrixir.model.form.metrics;
 
+import example.metrixir.model.form.FormBase;
 import lombok.Data;
 
 import java.util.Map;

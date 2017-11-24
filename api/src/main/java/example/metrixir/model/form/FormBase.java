@@ -1,4 +1,4 @@
-package example.metrixir.model.form.metrics;
+package example.metrixir.model.form;
 
 import kotowari.data.Validatable;
 
