@@ -4,7 +4,10 @@ METRIXIR.server = {
     protocol: 'http',
     host: '',
     api: {
-        metrics: 'api/metrics'
+        metrics: {
+            method: 'POST',
+            path: 'api/metrics'
+        }
     }
 };
 
@@ -13,41 +16,52 @@ $.fn.extend({
         var area = this;
         var inputs = area.find(':input').not(':button');
 
-        var page = {
-            location: {
-                host: location.host,
-                path: location.pathname
-            }
-        };
         inputs.on({
-            focus: function () {
+            onEvent: function (e, eventName, config) {
                 var input = $(this);
 
+                console.log(input.attr('name'));
+
+                var page = {
+                    location: {
+                        host: location.host,
+                        path: location.pathname
+                    }
+                };
                 var postData = Object.assign({
                     name: input.attr('name'),
-                    event: 'focus',
+                    event: eventName,
                     clientTime: Date.now()
                 }, page);
 
                 $.ajax({
-                    type: 'POST',
-                    url: METRIXIR.server.protocol + '://' + METRIXIR.server.host + '/' + METRIXIR.server.api.metrics,
+                    type: config.api.metrics.method,
+                    url: config.protocol + '://' + config.host + '/' + config.api.metrics.path,
                     data: JSON.stringify(postData),
                     dataType: 'json',
-                    async: true,
-                    cache: false,
                     contentType: 'application/json; charset=utf-8'
                 }).done(function (response) {
-                    console.log('done');
+                    // nop
                 });
             },
+            focus: function () {
+                $(this).trigger('onEvent', ['focus', METRIXIR.server])
+            },
             blur: function () {
-                var input = $(this);
+                $(this).trigger('onEvent', ['blur', METRIXIR.server])
             }
         });
     }
 });
 
 $(function () {
+    $.ajaxSetup({
+        async: true,
+        cache: false,
+        xhrFields: {
+            withCredentials: true
+        }
+    });
+
     $('.metrixir').metrixir();
 });

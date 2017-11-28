@@ -1,45 +1,53 @@
 package example.metrixir.configuration;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import enkan.Application;
-import enkan.Endpoint;
 import enkan.application.WebApplication;
-import enkan.data.HttpRequest;
-import enkan.data.HttpResponse;
 import enkan.endpoint.ResourceEndpoint;
 import enkan.middleware.*;
 import enkan.middleware.devel.HttpStatusCatMiddleware;
 import enkan.middleware.devel.StacktraceMiddleware;
 import enkan.middleware.devel.TraceWebMiddleware;
 import enkan.middleware.doma2.DomaTransactionMiddleware;
-import enkan.security.backend.SessionBackend;
 import enkan.system.inject.ComponentInjector;
 import example.metrixir.controller.metrics.MetricsController;
+import example.metrixir.controller.user.VisitorController;
 import kotowari.middleware.*;
-import kotowari.middleware.serdes.ToStringBodyWriter;
 import kotowari.routing.Routes;
 
 import java.util.Collections;
+import java.util.Set;
 
 import static enkan.util.BeanBuilder.builder;
-import static enkan.util.HttpResponseUtils.RedirectStatusCode.TEMPORARY_REDIRECT;
-import static enkan.util.HttpResponseUtils.redirect;
-import static enkan.util.Predicates.*;
+import static enkan.util.Predicates.NONE;
+import static enkan.util.Predicates.envIn;
 
 public class ApplicationConfiguration implements enkan.config.ApplicationFactory {
+
+    private static final Set<String> CORS_ORIGINS = Collections.singleton("http://localhost:63342");
+
     @Override
     public Application create(ComponentInjector injector) {
-        WebApplication app = new WebApplication();
+        final WebApplication app = new WebApplication();
 
-        Routes routes = Routes.define(r -> {
+        final Routes routes = Routes.define(r -> {
+            r.scope("", view -> {
+                view.get("/metrics").to(MetricsController.class, "index");
+            });
             r.scope("/api", api -> {
+                api.get("/metrics").to(MetricsController.class, "fetchMetrics");
                 api.post("/metrics").to(MetricsController.class, "create");
+                api.get("/visitors").to(VisitorController.class, "index");
             });
         }).compile();
 
         app.use(new DefaultCharsetMiddleware());
         app.use(NONE, new ServiceUnavailableMiddleware<>(new ResourceEndpoint("/public/html/503.html")));
+
         app.use(envIn("development"), new StacktraceMiddleware());
         app.use(envIn("development"), new TraceWebMiddleware());
+
         app.use(new TraceMiddleware<>());
         app.use(new ContentTypeMiddleware());
         app.use(envIn("development"), new HttpStatusCatMiddleware());
@@ -53,24 +61,33 @@ public class ApplicationConfiguration implements enkan.config.ApplicationFactory
         app.use(new FlashMiddleware());
         app.use(new ContentNegotiationMiddleware());
 
-        app.use(new AuthenticationMiddleware(Collections.singletonList(new SessionBackend())));
+        final CorsMiddleware corsMiddleware = new CorsMiddleware();
+        corsMiddleware.setOrigins(CORS_ORIGINS);
+        app.use(corsMiddleware);
 
-        app.use(new CorsMiddleware());
         app.use(new ResourceMiddleware());
         app.use(new RenderTemplateMiddleware());
         app.use(new RoutingMiddleware(routes));
 
-        app.use(and(path("^/auth/.*"), authenticated().negate()),
-                (Endpoint<HttpRequest, HttpResponse>) req -> redirect("/login", TEMPORARY_REDIRECT));
-
         app.use(new DomaTransactionMiddleware<>());
         app.use(new FormMiddleware());
+
+        final ObjectMapper objectMapper = objectMapper();
+
         app.use(builder(new SerDesMiddleware())
-                .set(SerDesMiddleware::setBodyWriters, new ToStringBodyWriter())
+                // TODO: service loaderで読み込んだ`JacksonJsonProvider`に負ける...
+//                .set(SerDesMiddleware::setBodyReaders, new JacksonJsonProvider(objectMapper))
+//                .set(SerDesMiddleware::setBodyWriters, new JacksonJsonProvider(objectMapper))
                 .build());
         app.use(new ValidateFormMiddleware());
         app.use(new ControllerInvokerMiddleware(injector));
 
         return app;
+    }
+
+    private ObjectMapper objectMapper() {
+        final JavaTimeModule module = new JavaTimeModule();
+
+        return new ObjectMapper().registerModule(module);
     }
 }

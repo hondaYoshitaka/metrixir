@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>テスト入力画面</title>
+
+    <script src="jquery-3.2.1.min.js"></script>
+    <script src="../client/metrixir.client.js"></script>
+
+    <script>
+        METRIXIR.server.host = 'localhost:3000';
+    </script>
+</head>
+<body>
+
+<div class="metrixir">
+    <input type="text" name="fullName"/>
+    <input type="search" name="searchText"/>
+    <input type="tel" name="telephone"/>
+    <input type="color" name="color"/>
+    <input type="week" name="week"/>
+    <input type="radio" name="gender" name="f"/>
+    <input type="radio" name="gender" name="m"/>
+    <input type="checkbox" name="like" value="work"/>
+    <input type="checkbox" name="like" value="game"/>
+    <select name="prefecture">
+        <option value="">none</option>
+        <option value="tokyo">東京</option>
+        <option value="osaka">大阪</option>
+    </select>
+</div>
+
+</body>
+</html>
