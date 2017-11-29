@@ -1,6 +1,11 @@
 # Getting started
-1. Get `metricir.client.js`.
-2. Added `jquery` and `metricir.client.js` on your page.
+## 計測APIサーバ
+1. Change direcotory to `api` .
+2. Start `example.metrixir.Application` with Java 8.
+
+## クライアント
+1. Download `metricir.client.js`.
+2. Added `jquery` and `metricir.client.js` on your html.
 ```html
 <script src="/js/jquery-3.2.1.min.js"></script>
 <script src="/js/metrixir.client.js"></script>
@@ -21,3 +26,6 @@
     <!-- etc. -->
 </div>
 ```
+
+## metrics view
+1. Access to `http://localhost:3001/metrics`
