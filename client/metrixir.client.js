@@ -20,8 +20,6 @@ $.fn.extend({
             onEvent: function (e, eventName, config) {
                 var input = $(this);
 
-                console.log(input.attr('name'));
-
                 var page = {
                     location: {
                         host: location.host,

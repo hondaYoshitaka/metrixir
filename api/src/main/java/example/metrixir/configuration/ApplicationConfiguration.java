@@ -31,7 +31,7 @@ import static enkan.util.Predicates.envIn;
 
 public class ApplicationConfiguration implements enkan.config.ApplicationFactory {
 
-    private static final Set<String> CORS_ORIGINS = Collections.singleton("http://localhost:63342");
+    private static final Set<String> CORS_ORIGINS = Collections.singleton("http://localhost:3000");
 
     @Override
     public Application create(ComponentInjector injector) {
@@ -93,11 +93,5 @@ public class ApplicationConfiguration implements enkan.config.ApplicationFactory
         app.use(new ControllerInvokerMiddleware(injector));
 
         return app;
-    }
-
-    private ObjectMapper objectMapper() {
-        final JavaTimeModule module = new JavaTimeModule();
-
-        return new ObjectMapper().registerModule(module);
     }
 }

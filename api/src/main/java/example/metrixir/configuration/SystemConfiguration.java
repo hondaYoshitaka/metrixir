@@ -26,7 +26,7 @@ public class SystemConfiguration implements enkan.config.EnkanSystemFactory {
                 "datasource", new HikariCPComponent(OptionMap.of("uri", Env.getString("DB_URL", "jdbc:h2:mem:test"))),
                 "app", new ApplicationComponent(ApplicationConfiguration.class.getName()),
                 "http", builder(new UndertowComponent())
-                        .set(UndertowComponent::setPort, Env.getInt("PORT", 3000))
+                        .set(UndertowComponent::setPort, Env.getInt("PORT", 3001))
                         .build()
         ).relationships(
                 component("http").using("app"),

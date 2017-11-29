@@ -62,11 +62,13 @@
                         for (var itemIndex in groupingMetrics) {
                             var metrics = groupingMetrics[itemIndex];
 
+                            var start = new Date(metrics.start), end = new Date(metrics.end);
+
                             items.push({
                                 group: groupIndex,
-                                content: '',
-                                start: metrics.start,
-                                end: metrics.end
+                                content: (end.getTime() - start.getTime()) / 1000 + ' sec',
+                                start: start,
+                                end: end
                             });
                         }
                         groupIndex++;
