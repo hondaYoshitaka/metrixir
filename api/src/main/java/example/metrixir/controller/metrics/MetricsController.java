@@ -1,7 +1,6 @@
 package example.metrixir.controller.metrics;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import enkan.collection.Headers;
 import enkan.collection.Multimap;
 import enkan.collection.Parameters;
 import enkan.component.doma2.DomaProvider;
@@ -21,7 +20,9 @@ import kotowari.component.TemplateEngine;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -78,18 +79,12 @@ public class MetricsController {
                 .orElseGet(() -> insertVisitor(cookie.getValue()));
 
         final Metrics metrics = new Metrics();
-        metrics.setHost("localhost");
-        metrics.setPath("path");
-        metrics.setEvent("focus");
-        metrics.setName("lastName");
-        metrics.setClientEventAt(LocalDateTime.now());
-        //FIXME if fixed bug of CorsMiddleware, remove comment-out.
-//        metrics.setHost(form.getLocation().getHost());
-//        metrics.setPath(form.getLocation().getPath());
-//        metrics.setEvent(form.getEvent());
-//        metrics.setName(form.getName());
-//        metrics.setClientEventAt(
-//                LocalDateTime.ofInstant(Instant.ofEpochMilli(form.getClientTime()), ZoneId.systemDefault()));
+        metrics.setHost(form.getLocation().getHost());
+        metrics.setPath(form.getLocation().getPath());
+        metrics.setEvent(form.getEvent());
+        metrics.setName(form.getName());
+        metrics.setClientEventAt(
+                LocalDateTime.ofInstant(Instant.ofEpochMilli(form.getClientTime()), ZoneId.systemDefault()));
         metrics.setCreatedAt(LocalDateTime.now());
 
         final int metricsCount = metricsDao.insert(metrics);
@@ -106,12 +101,9 @@ public class MetricsController {
             throw new RuntimeException("expected count 1, but actual: " + relationCount);
         }
 
-        // HACK: allow cookie on CORS (should set this at middleware layer)
         final HttpResponse<String> response = HttpResponse.of("{}");
         response.setCookies(Multimap.of(VISITOR_COOKIE_NAME, cookie));
-        response.setHeaders(Headers.of(
-                "Access-Control-Allow-Credentials", "true"
-        ));
+
         return response;
     }
 

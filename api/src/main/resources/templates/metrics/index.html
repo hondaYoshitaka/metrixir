@@ -9,14 +9,6 @@
     <script th:src="@{js/jquery-3.2.1.min.js}" src="../../public/js/jquery-3.2.1.min.js"></script>
     <script th:src="@{js/vis/dist/vis.min.js}" src="../../public/js/vis/dist/vis.min.js"></script>
     <script>
-        // FIXME
-        var formatDatetime = function (obj) {
-            if (!obj) return null;
-
-            return obj.year + '-' + obj.monthValue + '-' + obj.dayOfMonth + ' ' +
-                obj.hour + ':' + obj.minute + ':' + obj.second + '.' + obj.nano;
-        };
-
         $(function () {
             var container = $('#timeline');
             var visitorSelect = $('select[name="visitorId"]');
@@ -29,7 +21,7 @@
                     item: 5
                 },
                 zoomMax: 6 * 60 * 60 * 1000,
-                zoomMin: 5 * 1000
+                zoomMin: 10 * 1000
             };
 
             $.ajax({
@@ -73,8 +65,8 @@
                             items.push({
                                 group: groupIndex,
                                 content: '',
-                                start: formatDatetime(metrics.start),
-                                end: formatDatetime(metrics.end)
+                                start: metrics.start,
+                                end: metrics.end
                             });
                         }
                         groupIndex++;

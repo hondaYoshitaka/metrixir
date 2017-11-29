@@ -1,6 +1,8 @@
 package example.metrixir.configuration;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import enkan.Application;
 import enkan.application.WebApplication;
@@ -11,11 +13,15 @@ import enkan.middleware.devel.StacktraceMiddleware;
 import enkan.middleware.devel.TraceWebMiddleware;
 import enkan.middleware.doma2.DomaTransactionMiddleware;
 import enkan.system.inject.ComponentInjector;
+import example.metrixir.component.jaxrs.ext.JsonBodyReader;
+import example.metrixir.component.jaxrs.ext.JsonBodyWriter;
 import example.metrixir.controller.metrics.MetricsController;
 import example.metrixir.controller.user.VisitorController;
 import kotowari.middleware.*;
+import kotowari.middleware.serdes.ToStringBodyWriter;
 import kotowari.routing.Routes;
 
+import javax.ws.rs.ext.MessageBodyWriter;
 import java.util.Collections;
 import java.util.Set;
 
@@ -30,6 +36,13 @@ public class ApplicationConfiguration implements enkan.config.ApplicationFactory
     @Override
     public Application create(ComponentInjector injector) {
         final WebApplication app = new WebApplication();
+
+        final ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+        mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+        mapper.configure(DeserializationFeature.UNWRAP_SINGLE_VALUE_ARRAYS, true);
+        mapper.configure(DeserializationFeature.FAIL_ON_IGNORED_PROPERTIES, false);
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
         final Routes routes = Routes.define(r -> {
             r.scope("", view -> {
@@ -72,14 +85,11 @@ public class ApplicationConfiguration implements enkan.config.ApplicationFactory
         app.use(new DomaTransactionMiddleware<>());
         app.use(new FormMiddleware());
 
-        final ObjectMapper objectMapper = objectMapper();
-
         app.use(builder(new SerDesMiddleware())
-                // TODO: service loaderで読み込んだ`JacksonJsonProvider`に負ける...
-//                .set(SerDesMiddleware::setBodyReaders, new JacksonJsonProvider(objectMapper))
-//                .set(SerDesMiddleware::setBodyWriters, new JacksonJsonProvider(objectMapper))
+                .set(SerDesMiddleware::setBodyWriters, new MessageBodyWriter[]{new ToStringBodyWriter(), new JsonBodyWriter(mapper)})
+                .set(SerDesMiddleware::setBodyReaders, new JsonBodyReader(mapper))
                 .build());
-        app.use(new ValidateFormMiddleware());
+        app.use(new ValidateBodyMiddleware<>());
         app.use(new ControllerInvokerMiddleware(injector));
 
         return app;
