@@ -1,11 +1,11 @@
 # Getting started
 ## 計測APIサーバ
-1. Change direcotory to `api` .
-2. Start `example.metrixir.Application` with Java 8.
+1. Start `Application` with Java 8.
 
 ## クライアント
-1. Download `metricir.client.js`.
+1. Download `client/metricir.client.js` to your code.
 2. Added `jquery` and `metricir.client.js` on your html.
+
 ```html
 <script src="/js/jquery-3.2.1.min.js"></script>
 <script src="/js/metrixir.client.js"></script>
@@ -15,6 +15,7 @@
 </script>
 ```
 3. Added class of `metrixir`.
+
 ```html
 <div class="metrixir">
     <input type="text" name="hoge" />
