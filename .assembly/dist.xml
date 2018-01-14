@@ -9,11 +9,12 @@
         <file>
             <source>bin/start.sh</source>
             <outputDirectory>bin</outputDirectory>
-            <fileMode>0775</fileMode>
+            <fileMode>0777</fileMode>
         </file>
         <file>
             <source>target/${project.build.finalName}.jar</source>
             <outputDirectory>dist</outputDirectory>
+            <fileMode>0777</fileMode>
         </file>
     </files>
     <dependencySets>
