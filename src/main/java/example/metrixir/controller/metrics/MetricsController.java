@@ -158,7 +158,7 @@ public class MetricsController {
      */
     private static Cookie createVisitorCookie(final String visitorId) {
         final Cookie cookie = Cookie.create(VISITOR_COOKIE_NAME, visitorId);
-        cookie.setDomain(Env.getString("server.domain", "localhost"));
+        cookie.setDomain(Env.getString("SERVER_DOMAIN", "localhost"));
         cookie.setPath("/");
         cookie.setMaxAge(VISITOR_COOKIE_MAX_AGE);
         cookie.setHttpOnly(true);
