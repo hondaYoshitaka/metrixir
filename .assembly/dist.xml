@@ -7,12 +7,12 @@
     </formats>
     <files>
         <file>
-            <source>${basedir}/bin/start.sh</source>
+            <source>bin/start.sh</source>
             <outputDirectory>bin</outputDirectory>
             <fileMode>0777</fileMode>
         </file>
         <file>
-            <source>${basedir}/target/${project.build.finalName}.jar</source>
+            <source>target/${project.build.finalName}.jar</source>
             <outputDirectory>dist</outputDirectory>
             <fileMode>0777</fileMode>
         </file>
