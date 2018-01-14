@@ -2,10 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:th="http://www.thymeleaf.org">
 <head>
-    <link rel="stylesheet"
-          href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css"
-          integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb"
-          crossorigin="anonymous">
+    <link rel="stylesheet" href="/assets/css/bootstrap.min.css">
     <link rel="stylesheet" href="/assets/js/vis/dist/vis.min.css">
 
     <script src="/assets/js/jquery-3.2.1.min.js"></script>
@@ -18,7 +15,6 @@
             var options = {
                 orientation: 'top',
                 width: '100%',
-                height: '450px',
                 margin: {
                     item: 5
                 },
@@ -26,18 +22,6 @@
                 zoomMin: 10 * 1000
             };
 
-            $.ajax({
-                type: 'GET',
-                url: '/api/visitors',
-                dataType: 'json'
-            }).done(function (response) {
-                for (var index in response) {
-                    var visitorId = response[index];
-
-                    visitorSelect.append(
-                        '<option value="' + visitorId + '">' + visitorId + '</option>');
-                }
-            });
             visitorSelect.on('change', function () {
                 var select = $(this);
 
@@ -47,13 +31,14 @@
                 }
                 $.ajax({
                     type: 'GET',
-                    url: '/api/metrics?visitorId=' + visitorId,
+                    url: '/api/metrics?visitorId=' + visitorId + '&tag=' + $('body').data('tag'),
                     dataType: 'json'
                 }).done(function (response) {
                     var groups = [];
                     var items = [];
 
                     var groupIndex = 0;
+
                     for (var key in response.metricsMap) {
                         var groupingMetrics = response.metricsMap[key];
 
@@ -86,43 +71,23 @@
 
     <title>Metrics | Metrixir</title>
 </head>
-<body>
+<body th:data-tag="${tag}">
 <div class="container">
+    <h2 th:text="${tag}"></h2>
     <section>
         <div class="form-group">
             <label for="visitor-id">訪問者ID</label>
             <select name="visitorId" id="visitor-id" class="form-control">
                 <option value="">-- 未選択 --</option>
+                <option th:each="visitor : ${visitors}" th:object="${visitor}" th:text="*{id}">
+                    <span th:text="*{id}"></span>
+                </option>
             </select>
             <small class="form-text text-muted">登録ページを操作した訪問ユーザを特定するためのコード.</small>
         </div>
     </section>
     <section class="row">
         <div id="timeline" class="col-lg-12"></div>
-    </section>
-    <section class="row">
-        <table class="table table-border">
-            <thead>
-            <tr>
-                <th>ホスト名</th>
-                <th>パス</th>
-                <th>要素名</th>
-                <th>イベント</th>
-                <th>ブラウザ時間</th>
-                <th>サーバ作成日時</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr th:each="metrics : ${metricsList}" th:object="${metrics}">
-                <td th:text="*{host}"></td>
-                <td th:text="*{path}"></td>
-                <td th:text="*{name}"></td>
-                <td th:text="*{event}"></td>
-                <td th:text="*{clientEventAt}"></td>
-                <td th:text="*{createdAt}"></td>
-            </tr>
-            </tbody>
-        </table>
     </section>
 </div>
 </body>

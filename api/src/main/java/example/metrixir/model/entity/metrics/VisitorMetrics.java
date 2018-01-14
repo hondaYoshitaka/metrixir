@@ -9,4 +9,6 @@ public class VisitorMetrics {
     private String visitorId;
 
     private Long metricsId;
+
+    private Long clientHostId;
 }

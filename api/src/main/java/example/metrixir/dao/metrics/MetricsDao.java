@@ -10,11 +10,9 @@ import java.util.List;
 
 @Dao(config = DatabaseConfiguration.class)
 public interface MetricsDao {
-    @Select
-    List<Metrics> findAll();
 
     @Select
-    List<Metrics> findVisitorMetrics(final String visitorId);
+    List<Metrics> findVisitorMetricsByTag(final String visitorId, final String tag);
 
     @Insert
     int insert(final Metrics entity);

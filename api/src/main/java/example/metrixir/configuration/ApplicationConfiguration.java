@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.google.common.collect.ImmutableSet;
 import enkan.Application;
 import enkan.application.WebApplication;
 import enkan.endpoint.ResourceEndpoint;
@@ -15,6 +16,7 @@ import enkan.middleware.doma2.DomaTransactionMiddleware;
 import enkan.system.inject.ComponentInjector;
 import example.metrixir.component.jaxrs.ext.JsonBodyReader;
 import example.metrixir.component.jaxrs.ext.JsonBodyWriter;
+import example.metrixir.controller.IndexController;
 import example.metrixir.controller.metrics.MetricsController;
 import example.metrixir.controller.user.VisitorController;
 import kotowari.middleware.*;
@@ -22,7 +24,6 @@ import kotowari.middleware.serdes.ToStringBodyWriter;
 import kotowari.routing.Routes;
 
 import javax.ws.rs.ext.MessageBodyWriter;
-import java.util.Collections;
 import java.util.Set;
 
 import static enkan.util.BeanBuilder.builder;
@@ -31,7 +32,9 @@ import static enkan.util.Predicates.envIn;
 
 public class ApplicationConfiguration implements enkan.config.ApplicationFactory {
 
-    private static final Set<String> CORS_ORIGINS = Collections.singleton("http://localhost:3000");
+    private static final Set<String> CORS_ORIGINS = ImmutableSet.of(
+            "http://localhost:3000"
+    );
 
     @Override
     public Application create(ComponentInjector injector) {
@@ -46,6 +49,7 @@ public class ApplicationConfiguration implements enkan.config.ApplicationFactory
 
         final Routes routes = Routes.define(r -> {
             r.scope("", view -> {
+                view.get("/").to(IndexController.class, "index");
                 view.get("/metrics").to(MetricsController.class, "index");
             });
             r.scope("/api", api -> {

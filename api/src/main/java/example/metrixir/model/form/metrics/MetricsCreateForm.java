@@ -16,6 +16,8 @@ public class MetricsCreateForm extends FormBase {
 
     private String event;
 
+    private String hostTag;
+
     private Long clientTime;
 
     @Data
@@ -24,5 +26,6 @@ public class MetricsCreateForm extends FormBase {
         private String host;
 
         private String path;
+
     }
 }

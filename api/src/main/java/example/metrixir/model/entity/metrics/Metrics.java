@@ -20,8 +20,6 @@ public class Metrics {
     @Deprecated
     private String name;
     @Deprecated
-    private String host;
-    @Deprecated
     private String path;
 
     private LocalDateTime clientEventAt;

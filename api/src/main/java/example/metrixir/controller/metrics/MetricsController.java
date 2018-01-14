@@ -1,15 +1,18 @@
 package example.metrixir.controller.metrics;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import enkan.Env;
 import enkan.collection.Multimap;
 import enkan.collection.Parameters;
 import enkan.component.doma2.DomaProvider;
 import enkan.data.Cookie;
 import enkan.data.HttpRequest;
 import enkan.data.HttpResponse;
+import example.metrixir.dao.client.ClientHostDao;
 import example.metrixir.dao.metrics.MetricsDao;
 import example.metrixir.dao.metrics.VisitorMetricsDao;
 import example.metrixir.dao.user.VisitorDao;
+import example.metrixir.model.entity.client.ClientHost;
 import example.metrixir.model.entity.metrics.Metrics;
 import example.metrixir.model.entity.metrics.VisitorMetrics;
 import example.metrixir.model.entity.user.Visitor;
@@ -36,7 +39,7 @@ public class MetricsController {
     /**
      * 訪問者cookieの生存時間 (sec)
      */
-    private static final int VISITOR_COOKIE_MAX_AGE = (int) TimeUnit.MINUTES.toSeconds(30);
+    private static final int VISITOR_COOKIE_MAX_AGE = (int) TimeUnit.DAYS.toSeconds(2);
 
     @Inject
     private DomaProvider daoProvider;
@@ -49,22 +52,35 @@ public class MetricsController {
 
     private VisitorMetricsDao visitorMetricsDao;
 
+    private ClientHostDao clientHostDao;
+
     @PostConstruct
-    public void postConstruct() {
+    public void init() {
         metricsDao = daoProvider.getDao(MetricsDao.class);
         visitorDao = daoProvider.getDao(VisitorDao.class);
         visitorMetricsDao = daoProvider.getDao(VisitorMetricsDao.class);
+        clientHostDao = daoProvider.getDao(ClientHostDao.class);
     }
 
-    public HttpResponse index() {
-        final Object[] params = new Object[]{"metricsList", metricsDao.findAll()};
+    /**
+     * Metrics表示用のviewを表示します.
+     *
+     * @return view
+     */
+    public HttpResponse index(final Parameters parameters) {
+        final String tag = parameters.get("tag");
 
-        return templateEngine.render("metrics/index", params);
+        final List<Visitor> visitors = visitorDao.findAllByTag(tag);
+
+        return templateEngine.render("metrics/index",
+                new Object[]{"tag", tag, "visitors", visitors});
     }
 
     public MetricsResponseDto fetchMetrics(final Parameters parameters) throws JsonProcessingException {
         final String visitorId = parameters.get("visitorId");
-        final List<Metrics> metricsList = metricsDao.findVisitorMetrics(visitorId);
+        final String hostTag = parameters.get("tag");
+
+        final List<Metrics> metricsList = metricsDao.findVisitorMetricsByTag(visitorId, hostTag);
 
         return createMetricsResponseDto(metricsList);
     }
@@ -73,13 +89,16 @@ public class MetricsController {
     public HttpResponse create(final HttpRequest request, final MetricsCreateForm form) {
         final Cookie cookie = Optional.ofNullable(request.getCookies().get(VISITOR_COOKIE_NAME))
                 .orElse(createVisitorCookie(UUID.randomUUID().toString()));
+        final String tag = Optional.ofNullable(form.getHostTag()).orElse("");
+
         final Visitor visitor = Optional.ofNullable(visitorDao.findOne(cookie.getValue()))
                 .orElseGet(() -> insertVisitor(cookie.getValue()));
+        final ClientHost clientHost = Optional.ofNullable(clientHostDao.findByHostAndTag(form.getLocation().getHost(), tag))
+                .orElseGet(() -> insertClientHost(form.getLocation().getHost(), tag));
 
         final Metrics metrics = new Metrics();
-        metrics.setHost(form.getLocation().getHost());
-        metrics.setPath(form.getLocation().getPath());
         metrics.setEvent(form.getEvent());
+        metrics.setPath(form.getLocation().getPath());
         metrics.setName(form.getName());
         metrics.setClientEventAt(
                 LocalDateTime.ofInstant(Instant.ofEpochMilli(form.getClientTime()), ZoneId.systemDefault()));
@@ -92,6 +111,7 @@ public class MetricsController {
 
         final VisitorMetrics relation = new VisitorMetrics();
         relation.setVisitorId(visitor.getId());
+        relation.setClientHostId(clientHost.getId());
         relation.setMetricsId(metrics.getId());
 
         final int relationCount = visitorMetricsDao.insert(relation);
@@ -103,6 +123,18 @@ public class MetricsController {
         response.setCookies(Multimap.of(VISITOR_COOKIE_NAME, cookie));
 
         return response;
+    }
+
+    private ClientHost insertClientHost(final String host, final String tag) {
+        final ClientHost entity = new ClientHost();
+        entity.setHost(host);
+        entity.setTag(tag);
+
+        final int count = clientHostDao.insert(entity);
+        if (count != 1) {
+            throw new RuntimeException("expected count 1, but actual: " + count);
+        }
+        return entity;
     }
 
     /**
@@ -126,7 +158,7 @@ public class MetricsController {
      */
     private static Cookie createVisitorCookie(final String visitorId) {
         final Cookie cookie = Cookie.create(VISITOR_COOKIE_NAME, visitorId);
-        cookie.setDomain("localhost"); // FIXME
+        cookie.setDomain(Env.getString("server.domain", "localhost"));
         cookie.setPath("/");
         cookie.setMaxAge(VISITOR_COOKIE_MAX_AGE);
         cookie.setHttpOnly(true);
@@ -151,6 +183,7 @@ public class MetricsController {
             // focus + blur
             final List<MetricsResponseDto.MetricsDto> events = divide(entry.getValue(), 2)
                     .stream()
+                    .filter(pair -> pair.size() == 2)
                     .map(pair -> new MetricsResponseDto.MetricsDto(
                             pair.get(0).getClientEventAt(),
                             pair.get(1).getClientEventAt()))

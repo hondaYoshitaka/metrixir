@@ -20,6 +20,7 @@ public class VisitorController {
         visitorDao = daoProvider.getDao(VisitorDao.class);
     }
 
+    @Deprecated
     public List<String> index() {
         return visitorDao.findAll().stream()
                 .map(Visitor::getId)

@@ -14,7 +14,6 @@ public class V1__CreateMetrics implements JdbcMigration {
                     "  id                BIGINT AUTO_INCREMENT PRIMARY KEY," +
                     "  event             VARCHAR(255) NOT NULL," +
                     "  name              VARCHAR(255) NOT NULL," +
-                    "  host              VARCHAR(255) NOT NULL," +
                     "  path              VARCHAR(512) NOT NULL," +
                     "  client_event_at   TIMESTAMP," +
                     "  created_at        TIMESTAMP" +

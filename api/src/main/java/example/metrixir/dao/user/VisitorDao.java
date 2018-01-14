@@ -14,8 +14,12 @@ public interface VisitorDao {
     Visitor findOne(final String id);
 
     @Select
+    List<Visitor> findAllByTag(String tag);
+
+    @Select
     List<Visitor> findAll();
 
     @Insert
     int insert(final Visitor visitor);
+
 }

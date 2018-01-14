@@ -14,4 +14,6 @@ public class ClientHost {
     private Long id;
 
     private String host;
+
+    private String tag;
 }
