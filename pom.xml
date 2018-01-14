@@ -31,7 +31,7 @@
                 <version>2.6</version>
                 <configuration>
                     <descriptors>
-                        <descriptor>${basedir}/.assembly/dist.xml</descriptor>
+                        <descriptor>.assembly/dist.xml</descriptor>
                     </descriptors>
                 </configuration>
                 <executions>
