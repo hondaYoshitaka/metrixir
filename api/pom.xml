@@ -1,29 +1,23 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-
     <parent>
-        <groupId>example</groupId>
-        <artifactId>metrixir</artifactId>
-        <version>0.1.0-SNAPSHOT</version>
-        <relativePath>../pom.xml</relativePath>
+        <groupId>org.sonatype.oss</groupId>
+        <artifactId>oss-parent</artifactId>
+        <version>9</version>
     </parent>
 
-    <artifactId>metrixir-api</artifactId>
+    <groupId>example</groupId>
+    <artifactId>metrixir</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
 
-        <enkan.version>0.4.0-SNAPSHOT</enkan.version>
-        <enkan.undertow.version>0.4.0-SNAPSHOT</enkan.undertow.version>
-        <enkan.thymeleaf.version>0.4.0-SNAPSHOT</enkan.thymeleaf.version>
-        <enkan.flyway.version>0.4.0-SNAPSHOT</enkan.flyway.version>
-        <enkan.doma2.version>0.4.0-SNAPSHOT</enkan.doma2.version>
-        <enkan.HikariCP.version>0.4.0-SNAPSHOT</enkan.HikariCP.version>
-        <enkan.jackson.version>0.4.0-SNAPSHOT</enkan.jackson.version>
-        <kotowari.version>0.4.0-SNAPSHOT</kotowari.version>
+        <enkan.version>0.4.0</enkan.version>
 
         <lombok.version>1.16.18</lombok.version>
         <h2.version>1.4.189</h2.version>
@@ -31,26 +25,6 @@
 
 
     <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <version>2.6</version>
-                <configuration>
-                    <descriptors>
-                        <descriptor>src/assembly/dist.xml</descriptor>
-                    </descriptors>
-                </configuration>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
     </build>
 
     <dependencies>
@@ -72,37 +46,37 @@
         <dependency>
             <groupId>net.unit8.enkan</groupId>
             <artifactId>kotowari</artifactId>
-            <version>${kotowari.version}</version>
+            <version>${enkan.version}</version>
         </dependency>
         <dependency>
             <groupId>net.unit8.enkan</groupId>
             <artifactId>enkan-component-undertow</artifactId>
-            <version>${enkan.undertow.version}</version>
+            <version>${enkan.version}</version>
         </dependency>
         <dependency>
             <groupId>net.unit8.enkan</groupId>
             <artifactId>enkan-component-doma2</artifactId>
-            <version>${enkan.doma2.version}</version>
+            <version>${enkan.version}</version>
         </dependency>
         <dependency>
             <groupId>net.unit8.enkan</groupId>
             <artifactId>enkan-component-jackson</artifactId>
-            <version>${enkan.jackson.version}</version>
+            <version>${enkan.version}</version>
         </dependency>
         <dependency>
             <groupId>net.unit8.enkan</groupId>
             <artifactId>enkan-component-HikariCP</artifactId>
-            <version>${enkan.HikariCP.version}</version>
+            <version>${enkan.version}</version>
         </dependency>
         <dependency>
             <groupId>net.unit8.enkan</groupId>
             <artifactId>enkan-component-flyway</artifactId>
-            <version>${enkan.flyway.version}</version>
+            <version>${enkan.version}</version>
         </dependency>
         <dependency>
             <groupId>net.unit8.enkan</groupId>
             <artifactId>enkan-component-thymeleaf</artifactId>
-            <version>${enkan.thymeleaf.version}</version>
+            <version>${enkan.version}</version>
         </dependency>
 
         <dependency>
