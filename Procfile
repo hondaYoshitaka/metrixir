@@ -1,1 +1,1 @@
-web: unzip api/target/metrixir-0.1.0-SNAPSHOT-production.zip && cd metrixir-0.1.0-SNAPSHOT && ./bin/start.sh
+web: unzip target/metrixir-0.1.0-SNAPSHOT-production.zip && cd metrixir-0.1.0-SNAPSHOT && ./bin/start.sh
