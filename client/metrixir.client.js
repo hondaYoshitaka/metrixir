@@ -70,17 +70,17 @@ window.addEventListener('load', function () {
             // submit時にunloadイベントが走らないようにoffしておく
             window.onbeforeunload = null;
 
-            METRIXIR.postEventLog('form', 'submit');
+            METRIXIR.postEventLog('metrixir.page', 'submit');
 
             return true;
         }
     }
 
-    METRIXIR.postEventLog('form', 'load');
+    METRIXIR.postEventLog('metrixir.page', 'load');
 
 }, false);
 
 window.addEventListener('beforeunload', function (event) {
-    METRIXIR.postEventLog('form', 'unload');
+    METRIXIR.postEventLog('metrixir.page', 'unload');
 
 }, false);
