@@ -3,6 +3,7 @@ var METRIXIR = METRIXIR || {};
 METRIXIR.server = Object.assign({}, {
     protocol: 'http',
     host: '',
+    tag: 'default',
     api: {
         metrics: {
             method: 'POST',
@@ -11,32 +12,34 @@ METRIXIR.server = Object.assign({}, {
     }
 }, METRIXIR.server);
 
+METRIXIR.postEventLog = function (inputName, eventName) {
+    var config = METRIXIR.server;
 
-window.onload = function () {
-    var postEventLog = function (inputName, eventName, config) {
-        var page = {
-            location: {
-                host: location.host,
-                path: location.pathname
-            }
-        };
-        var postData = Object.assign({
-            name: inputName,
-            event: eventName,
-            clientTime: Date.now()
-        }, page);
-
-        var xhr = new XMLHttpRequest();
-        xhr.open(
-            config.api.metrics.method,
-            config.protocol + '://' + config.host + '/' + config.api.metrics.path);
-
-        xhr.setRequestHeader('Content-Type', 'application/json; charset=utf-8');
-        xhr.withCredentials = true;
-
-        xhr.send(JSON.stringify(postData));
+    var page = {
+        location: {
+            host: location.host,
+            path: location.pathname
+        }
     };
+    var postData = Object.assign({
+        name: inputName,
+        event: eventName,
+        hostTag: config.tag,
+        clientTime: Date.now()
+    }, page);
 
+    var xhr = new XMLHttpRequest();
+    xhr.open(
+        config.api.metrics.method,
+        config.protocol + '://' + config.host + '/' + config.api.metrics.path);
+
+    xhr.setRequestHeader('Content-Type', 'application/json; charset=utf-8');
+    xhr.withCredentials = true;
+
+    xhr.send(JSON.stringify(postData));
+};
+
+window.addEventListener('load', function () {
     var elements = document.getElementsByClassName('metrixir');
 
     for (var i = 0; i < elements.length; i++) {
@@ -48,14 +51,36 @@ window.onload = function () {
             input.onfocus = function () {
                 var input = this;
 
-                postEventLog(input.name, 'focus', METRIXIR.server);
+                METRIXIR.postEventLog(input.name, 'focus');
             };
             input.onblur = function () {
                 var input = this;
 
-                postEventLog(input.name, 'blur', METRIXIR.server);
+                METRIXIR.postEventLog(input.name, 'blur');
             };
         }
     }
 
-};
+    var forms = document.getElementsByTagName('form');
+
+    for (var k = 0; k < forms.length; k++) {
+        var form = forms[k];
+
+        form.onsubmit = function () {
+            // submit時にunloadイベントが走らないようにoffしておく
+            window.onbeforeunload = null;
+
+            METRIXIR.postEventLog('form', 'submit');
+
+            return true;
+        }
+    }
+
+    METRIXIR.postEventLog('form', 'load');
+
+}, false);
+
+window.addEventListener('beforeunload', function (event) {
+    METRIXIR.postEventLog('form', 'unload');
+
+}, false);
