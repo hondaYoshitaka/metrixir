@@ -11,7 +11,7 @@ public class V0__CreateClientHost implements JdbcMigration {
     public void migrate(Connection connection) throws Exception {
         try (Statement stmt = connection.createStatement()) {
             stmt.execute("CREATE TABLE client_host (" +
-                    "  id                BIGINT AUTO_INCREMENT  PRIMARY KEY," +
+                    "  id                SERIAL PRIMARY KEY," +
                     "  host              VARCHAR(255) NOT NULL," +
                     "  tag               VARCHAR(255)" +
                     ")");

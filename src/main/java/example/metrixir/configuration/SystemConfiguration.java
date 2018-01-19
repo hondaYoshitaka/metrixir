@@ -24,9 +24,9 @@ public class SystemConfiguration implements enkan.config.EnkanSystemFactory {
                 "flyway", new FlywayMigration(),
                 "template", new ThymeleafTemplateEngine(),
                 "datasource", new HikariCPComponent(OptionMap.of(
-                        "uri", Env.getString("DATASOURCE_URL", "jdbc:h2:mem:test"),
-                        "username", Env.getString("DATASOURCE_USERNAME", ""),
-                        "password", Env.getString("DATASOURCE_PASSWORD", ""))),
+                        "uri", Env.getString("DATASOURCE_URL", "jdbc:postgresql://localhost/metrixir"),
+                        "username", Env.getString("DATASOURCE_USERNAME", "metrixir"),
+                        "password", Env.getString("DATASOURCE_PASSWORD", "p@ssw0rd"))),
                 "app", new ApplicationComponent(ApplicationConfiguration.class.getName()),
                 "http", builder(new UndertowComponent())
                         .set(UndertowComponent::setPort, Env.getInt("PORT", 3001))

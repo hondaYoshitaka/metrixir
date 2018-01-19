@@ -18,7 +18,6 @@ import example.metrixir.component.jaxrs.ext.JsonBodyReader;
 import example.metrixir.component.jaxrs.ext.JsonBodyWriter;
 import example.metrixir.controller.IndexController;
 import example.metrixir.controller.metrics.MetricsController;
-import example.metrixir.controller.user.VisitorController;
 import kotowari.middleware.*;
 import kotowari.middleware.serdes.ToStringBodyWriter;
 import kotowari.routing.Routes;
@@ -33,7 +32,7 @@ import static enkan.util.Predicates.envIn;
 public class ApplicationConfiguration implements enkan.config.ApplicationFactory {
 
     private static final Set<String> CORS_ORIGINS = ImmutableSet.of(
-            "http://localhost:3000"
+        "http://localhost:3000"
     );
 
     @Override
@@ -55,12 +54,12 @@ public class ApplicationConfiguration implements enkan.config.ApplicationFactory
             r.scope("/api", api -> {
                 api.get("/metrics").to(MetricsController.class, "fetchMetrics");
                 api.post("/metrics").to(MetricsController.class, "create");
-                api.get("/visitors").to(VisitorController.class, "index");
             });
         }).compile();
 
         app.use(new DefaultCharsetMiddleware());
-        app.use(NONE, new ServiceUnavailableMiddleware<>(new ResourceEndpoint("/public/html/503.html")));
+        app.use(NONE,
+                new ServiceUnavailableMiddleware<>(new ResourceEndpoint("/public/html/503.html")));
 
         app.use(envIn("development"), new StacktraceMiddleware());
         app.use(envIn("development"), new TraceWebMiddleware());
@@ -90,9 +89,11 @@ public class ApplicationConfiguration implements enkan.config.ApplicationFactory
         app.use(new FormMiddleware());
 
         app.use(builder(new SerDesMiddleware())
-                .set(SerDesMiddleware::setBodyWriters, new MessageBodyWriter[]{new ToStringBodyWriter(), new JsonBodyWriter(mapper)})
-                .set(SerDesMiddleware::setBodyReaders, new JsonBodyReader(mapper))
-                .build());
+                    .set(SerDesMiddleware::setBodyWriters,
+                         new MessageBodyWriter[] {new ToStringBodyWriter(),
+                             new JsonBodyWriter(mapper)})
+                    .set(SerDesMiddleware::setBodyReaders, new JsonBodyReader(mapper))
+                    .build());
         app.use(new ValidateBodyMiddleware<>());
         app.use(new ControllerInvokerMiddleware(injector));
 

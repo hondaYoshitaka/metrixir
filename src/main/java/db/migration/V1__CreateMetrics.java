@@ -11,7 +11,7 @@ public class V1__CreateMetrics implements JdbcMigration {
     public void migrate(Connection connection) throws Exception {
         try (Statement stmt = connection.createStatement()) {
             stmt.execute("CREATE TABLE metrics (" +
-                    "  id                BIGINT AUTO_INCREMENT PRIMARY KEY," +
+                    "  id                SERIAL PRIMARY KEY," +
                     "  event             VARCHAR(255) NOT NULL," +
                     "  name              VARCHAR(255) NOT NULL," +
                     "  path              VARCHAR(512) NOT NULL," +
