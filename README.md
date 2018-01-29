@@ -1,11 +1,14 @@
 # Getting started
 ## 計測APIサーバ
-1. Change directory to `api` .
-2. Start `example.metrixir.Application` with Java 8.
+(1) Start database on docker
+```text
+$ docker-compose up -d
+```
+(2) Start class `Application` with Java 8.
 
 ## クライアント
-1. Download `metricir.client.js`.
-2. Added `metricir.client.js` on your html.
+(1) Download `client/metrixir.client.js` to your code.
+
 ```html
 <script src="/js/metrixir.client.js"></script>
 
@@ -13,7 +16,7 @@
     METRIXIR.server.host = '${計測サーバのhost:"localhost:3001"}';
 </script>
 ```
-3. Added class `metrixir` in your html.
+(2) Added class `metrixir` in your html.
 
 ```html
 <div class="metrixir">
@@ -28,4 +31,4 @@
 ```
 
 ## metrics view
-1. Access to `http://localhost:3001/metrics`
+(1) Access to `http://localhost:3001/metrics`

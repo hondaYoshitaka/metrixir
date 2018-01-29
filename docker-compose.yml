@@ -1,16 +1,14 @@
-postgres-data:
-  image: busybox
-  volumes:
-      - /var/lib/postgresql/data
-  container_name: postgres-datastore-metrixir
-
-postgresql:
-  image: postgres
-  environment:
-    POSTGRES_USER: metrixir
-    POSTGRES_PASSWORD: p@ssw0rd
-  ports:
-    - "5432:5432"
-  container_name: postgres-db-metrixir
-  volumes_from:
-      - postgres-data
+version: '3'
+services:
+  rdb:
+    image: 'postgres:10.1'
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_DB: 'metrixir'
+      POSTGRES_USER: 'dba'
+      POSTGRES_PASSWORD: 'p@ssw0rd'
+    volumes:
+      - rdb-data:/var/lib/postgresql/data
+volumes:
+  rdb-data:

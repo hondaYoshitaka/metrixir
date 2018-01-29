@@ -20,6 +20,7 @@
         <enkan.version>0.4.0</enkan.version>
 
         <lombok.version>1.16.18</lombok.version>
+        <postgres.version>42.2.0</postgres.version>
     </properties>
 
     <build>
@@ -123,7 +124,7 @@
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <version>42.2.0</version>
+            <version>${postgres.version}</version>
         </dependency>
     </dependencies>
 </project>
