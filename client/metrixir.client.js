@@ -12,21 +12,37 @@ METRIXIR.server = Object.assign({}, {
     }
 }, METRIXIR.server);
 
+METRIXIR.page = Object.assign({}, {
+    location: {
+        host: location.host,
+        path: location.pathname
+    },
+    transactionId: (function uuid() {
+        var uuid = '', random = '';
+
+        for (var i = 0; i < 32; i++) {
+            random = Math.random() * 16 | 0;
+
+            if (i === 8 || i === 12 || i === 16 || i === 20) {
+                uuid += "-"
+            }
+            uuid += (i === 12 ? 4 : (i === 16 ? (random & 3 | 8) : random)).toString(16);
+        }
+        return uuid;
+    })()
+
+}, METRIXIR.page);
+
 METRIXIR.postEventLog = function (inputName, eventName) {
     var config = METRIXIR.server;
 
-    var page = {
-        location: {
-            host: location.host,
-            path: location.pathname
-        }
-    };
     var postData = Object.assign({
         name: inputName,
         event: eventName,
         hostTag: config.tag,
         clientTime: Date.now()
-    }, page);
+
+    }, METRIXIR.page);
 
     var xhr = new XMLHttpRequest();
     xhr.open(
@@ -39,7 +55,13 @@ METRIXIR.postEventLog = function (inputName, eventName) {
     xhr.send(JSON.stringify(postData));
 };
 
-window.addEventListener('load', function () {
+
+METRIXIR.handleBeforeunload = function (event) {
+    METRIXIR.postEventLog('metrixir.page', 'unload');
+
+};
+
+METRIXIR.handleLoad = function () {
     var elements = document.getElementsByClassName('metrixir');
 
     for (var i = 0; i < elements.length; i++) {
@@ -68,7 +90,7 @@ window.addEventListener('load', function () {
 
         form.onsubmit = function () {
             // submit時にunloadイベントが走らないようにoffしておく
-            window.onbeforeunload = null;
+            window.removeEventListener('beforeunload', METRIXIR.handleBeforeunload);
 
             METRIXIR.postEventLog('metrixir.page', 'submit');
 
@@ -77,10 +99,7 @@ window.addEventListener('load', function () {
     }
 
     METRIXIR.postEventLog('metrixir.page', 'load');
+};
 
-}, false);
-
-window.addEventListener('beforeunload', function (event) {
-    METRIXIR.postEventLog('metrixir.page', 'unload');
-
-}, false);
+window.addEventListener('beforeunload', METRIXIR.handleBeforeunload, false);
+window.addEventListener('load', METRIXIR.handleLoad, false);

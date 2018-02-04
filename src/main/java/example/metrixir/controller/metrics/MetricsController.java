@@ -1,6 +1,5 @@
 package example.metrixir.controller.metrics;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import enkan.Env;
 import enkan.collection.Multimap;
 import enkan.collection.Parameters;
@@ -16,6 +15,7 @@ import example.metrixir.model.entity.client.ClientHost;
 import example.metrixir.model.entity.metrics.Metrics;
 import example.metrixir.model.entity.metrics.VisitorMetrics;
 import example.metrixir.model.entity.user.Visitor;
+import example.metrixir.model.form.metrics.HostMetricsFetchForm;
 import example.metrixir.model.form.metrics.MetricsCreateForm;
 import example.metrixir.model.response.metrics.MetricsResponseDto;
 import kotowari.component.TemplateEngine;
@@ -23,6 +23,7 @@ import kotowari.component.TemplateEngine;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
+import javax.validation.constraints.NotNull;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -30,6 +31,8 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+
+import static java.util.stream.Collectors.groupingBy;
 
 public class MetricsController {
     /**
@@ -76,7 +79,7 @@ public class MetricsController {
                 new Object[]{"tag", tag, "visitors", visitors});
     }
 
-    public MetricsResponseDto fetchMetrics(final Parameters parameters) throws JsonProcessingException {
+    public MetricsResponseDto fetchMetrics(final Parameters parameters) {
         final String visitorId = parameters.get("visitorId");
         final String hostTag = parameters.get("tag");
 
@@ -85,18 +88,27 @@ public class MetricsController {
         return createMetricsResponseDto(metricsList);
     }
 
+    public HttpResponse showHostMetrics(final HostMetricsFetchForm form) {
+        final List<Metrics> metricsList = metricsDao.findAllByPage(form.getHostId());
+
+        final Object[] params = {
+                "host", clientHostDao.findById(form.getHostId()),
+                "metricsMap", metricsList.stream().collect(groupingBy(Metrics::getTransactionId))};
+
+        return templateEngine.render("metrics/hostMetrics", params);
+    }
+
     @Transactional
     public HttpResponse create(final HttpRequest request, final MetricsCreateForm form) {
         final Cookie cookie = Optional.ofNullable(request.getCookies().get(VISITOR_COOKIE_NAME))
                 .orElse(createVisitorCookie(UUID.randomUUID().toString()));
         final String tag = Optional.ofNullable(form.getHostTag()).orElse("");
 
-        final Visitor visitor = Optional.ofNullable(visitorDao.findOne(cookie.getValue()))
-                .orElseGet(() -> insertVisitor(cookie.getValue()));
-        final ClientHost clientHost = Optional.ofNullable(clientHostDao.findByHostAndTag(form.getLocation().getHost(), tag))
-                .orElseGet(() -> insertClientHost(form.getLocation().getHost(), tag));
+        final Visitor visitor = fetchVisitorBy(cookie.getValue());
+        final ClientHost clientHost = fetchClientHostBy(form.getLocation().getHost(), tag);
 
         final Metrics metrics = new Metrics();
+        metrics.setTransactionId(form.getTransactionId());
         metrics.setEvent(form.getEvent());
         metrics.setPath(form.getLocation().getPath());
         metrics.setName(form.getName());
@@ -125,6 +137,17 @@ public class MetricsController {
         return response;
     }
 
+    @NotNull
+    private ClientHost fetchClientHostBy(final String host, final String tag) {
+        final ClientHost entity = clientHostDao.findByHostAndTag(host, tag);
+
+        if (entity == null) {
+            return insertClientHost(host, tag);
+        }
+        return entity;
+    }
+
+    @NotNull
     private ClientHost insertClientHost(final String host, final String tag) {
         final ClientHost entity = new ClientHost();
         entity.setHost(host);
@@ -137,10 +160,17 @@ public class MetricsController {
         return entity;
     }
 
-    /**
-     * @param id 訪問者ID
-     * @return visitor
-     */
+    @NotNull
+    private Visitor fetchVisitorBy(final String id) {
+        final Visitor entity = visitorDao.findOne(id);
+
+        if (entity == null) {
+            return insertVisitor(id);
+        }
+        return entity;
+    }
+
+    @NotNull
     private Visitor insertVisitor(final String id) {
         final Visitor entity = new Visitor();
         entity.setId(id);
@@ -152,10 +182,7 @@ public class MetricsController {
         return entity;
     }
 
-    /**
-     * @param visitorId 訪問者ID
-     * @return cookie
-     */
+    @NotNull
     private static Cookie createVisitorCookie(final String visitorId) {
         final Cookie cookie = Cookie.create(VISITOR_COOKIE_NAME, visitorId);
         cookie.setDomain(Env.getString("SERVER_DOMAIN", "localhost"));
@@ -177,7 +204,7 @@ public class MetricsController {
             return dto;
         }
         final Map<String, List<Metrics>> groupBy = metricsList.stream()
-                .collect(Collectors.groupingBy(Metrics::getName));
+                .collect(groupingBy(Metrics::getName));
 
         for (final Map.Entry<String, List<Metrics>> entry : groupBy.entrySet()) {
             // focus + blur

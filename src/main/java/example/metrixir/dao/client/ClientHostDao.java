@@ -11,6 +11,9 @@ import java.util.List;
 @Dao(config = DatabaseConfiguration.class)
 public interface ClientHostDao {
     @Select
+    ClientHost findById(final Long id);
+
+    @Select
     ClientHost findByHostAndTag(final String host, final String tag);
 
     @Select

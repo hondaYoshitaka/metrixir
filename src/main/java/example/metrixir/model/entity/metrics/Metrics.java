@@ -15,6 +15,8 @@ public class Metrics {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private String transactionId;
+
     private String event;
 
     @Deprecated

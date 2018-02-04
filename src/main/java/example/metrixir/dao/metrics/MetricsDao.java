@@ -14,6 +14,9 @@ public interface MetricsDao {
     @Select
     List<Metrics> findVisitorMetricsByTag(final String visitorId, final String tag);
 
+    @Select
+    List<Metrics> findAllByPage(final Long hostId);
+
     @Insert
     int insert(final Metrics entity);
 }

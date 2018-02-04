@@ -32,7 +32,7 @@ import static enkan.util.Predicates.envIn;
 public class ApplicationConfiguration implements enkan.config.ApplicationFactory {
 
     private static final Set<String> CORS_ORIGINS = ImmutableSet.of(
-        "http://localhost:3000"
+            "http://localhost:3000"
     );
 
     @Override
@@ -49,7 +49,9 @@ public class ApplicationConfiguration implements enkan.config.ApplicationFactory
         final Routes routes = Routes.define(r -> {
             r.scope("", view -> {
                 view.get("/").to(IndexController.class, "index");
+
                 view.get("/metrics").to(MetricsController.class, "index");
+                view.get("/hosts/:hostId/metrics").to(MetricsController.class, "showHostMetrics");
             });
             r.scope("/api", api -> {
                 api.get("/metrics").to(MetricsController.class, "fetchMetrics");
@@ -89,11 +91,11 @@ public class ApplicationConfiguration implements enkan.config.ApplicationFactory
         app.use(new FormMiddleware());
 
         app.use(builder(new SerDesMiddleware())
-                    .set(SerDesMiddleware::setBodyWriters,
-                         new MessageBodyWriter[] {new ToStringBodyWriter(),
-                             new JsonBodyWriter(mapper)})
-                    .set(SerDesMiddleware::setBodyReaders, new JsonBodyReader(mapper))
-                    .build());
+                .set(SerDesMiddleware::setBodyWriters,
+                        new MessageBodyWriter[]{new ToStringBodyWriter(),
+                                new JsonBodyWriter(mapper)})
+                .set(SerDesMiddleware::setBodyReaders, new JsonBodyReader(mapper))
+                .build());
         app.use(new ValidateBodyMiddleware<>());
         app.use(new ControllerInvokerMiddleware(injector));
 

@@ -12,6 +12,8 @@ public class MetricsCreateForm extends FormBase {
 
     private ClientLocation location;
 
+    private String transactionId;
+
     private String name;
 
     private String event;
