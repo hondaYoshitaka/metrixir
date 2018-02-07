@@ -2,86 +2,310 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:th="http://www.thymeleaf.org">
 <head>
-    <link rel="stylesheet" href="/assets/css/bootstrap.min.css">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-    <script src="/assets/js/jquery-3.2.1.min.js"></script>
-    <script>
-        $(function () {
-            var tbody = $('#table-metrics tbody');
-            var transactions = $('.each-page-transaction');
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+          crossorigin="anonymous">
+    <style>
+        .badge {
+            min-width: 4rem;
+        }
 
-            var records = [];
+        .badge-staying {
+            color: #fff;
+            background-color: #fdcb6e;
+        }
 
-            transactions.each(function () {
-                var metricsList = $(this).find('.metrics');
+        .badge-complete {
+            color: #fff;
+            background-color: #0984e3;
+        }
 
-                var first = metricsList.first();
-                var last = metricsList.last();
-
-                var status = (function (elm) {
-                    switch (elm.data('event-name')) {
-                        case 'submit':
-                            return 'complete';
-                        case 'unload':
-                            return 'leave';
-                        default:
-                            return 'staying';
-                    }
-                })(last);
-                // 同一トランザクション内は同じページのはずなので
-                // 任意の要素から取り出す
-                var path = first.data('path');
-                var total = ( new Date(last.data('client-at')).getTime() - new Date(first.data('client-at')).getTime() ) / 1000;
-
-                records.push({status: status, path: path, total: total});
-            });
-
-            for (var index in records) {
-                var contents = [
-                    records[index].status,
-                    records[index].path,
-                    '-',
-                    records[index].total
-                ];
-                var tr = $('<tr/>');
-
-                for (var contentIdx in contents) {
-                    tr.append($('<td/>').append(contents[contentIdx]));
-                }
-                tbody.append(tr);
-            }
-        });
-    </script>
+        .badge-leave {
+            color: #fff;
+            background-color: #d63031;
+        }
+    </style>
 
     <title>Host Metrics | Metrixir</title>
 </head>
 
 <body>
 <div class="container">
-    <h2 th:text="${host.host}"></h2>
-    <h4 th:text="${host.tag}"></h4>
+    <div class="row">
+        <div class="col-12">
+            <h2 th:text="${host.host}"></h2>
+            <h4 th:text="${host.tag}"></h4>
+        </div>
+    </div>
 
-    <!-- トランザクション毎 -->
     <section class="row">
-        <div class="each-page-transaction" th:each="entry : ${metricsMap}">
+        <div class="col-12">
+
+            <div class="each-page-transaction" th:each="entry : ${metricsMap}">
             <span class="metrics"
                   th:each="metrics : ${entry.value}" th:object="${metrics}"
                   th:data-path="*{path}" th:data-input-name="*{name}"
                   th:data-event-name="*{event}" th:data-client-at="*{clientEventAt}"></span>
-        </div>
+            </div>
 
-        <table id="table-metrics">
-            <thead>
-            <tr>
-                <th>status</th>
-                <th>path</th>
-                <th>detail</th>
-                <th>total (秒)</th>
-            </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
+            <table id="table-metrics" class="table">
+                <thead>
+                <tr>
+                    <th style="width: 5rem;">status</th>
+                    <th style="width: 10rem;">path</th>
+                    <th>detail</th>
+                    <th style="width: 7rem;">total (sec)</th>
+                </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
     </section>
 </div>
 </body>
+<script src="/assets/js/jquery-3.2.1.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+        integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+        crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+        crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+        crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.1/Chart.min.js"></script>
+<script>
+    (function (Chart) {
+        var cloneArray = function (srcAry) {
+            var dstAry = [];
+            var length = srcAry.length;
+
+            for (var i = 0; i < length; i++) {
+                dstAry.push(srcAry[i]);
+            }
+            return dstAry;
+        };
+
+        var setOriginalData = function (data) {
+            data.originalData = data.datasets.map(function (dataset) {
+                return cloneArray(dataset.data);
+            });
+        };
+
+        // set calculated rate (xx%) to data.calculatedData
+        var calculateRate = function (data) {
+            var visibles = data.datasets.map(function (dataset) {
+                if (!dataset._meta) return true;
+
+                for (var i in dataset._meta) {
+                    return !dataset._meta[i].hidden;
+                }
+            });
+
+            var totals = Array.apply(null, new Array(data.datasets[0].data.length)).map(function (el, i) {
+                return data.datasets.reduce(function (sum, dataset, j) {
+                    var key = dataset.stack;
+                    if (!sum[key]) sum[key] = 0;
+                    sum[key] += dataset.data[i] * visibles[j];
+
+                    return sum;
+                }, {});
+            });
+
+            data.calculatedData = data.datasets.map(function (dataset, i) {
+                return dataset.data.map(function (val, i) {
+                    var total = totals[i][dataset.stack];
+                    return val && total ? Math.round(val * 1000 / total) / 10 : 0;
+                });
+            });
+        };
+
+        var tooltipLabel = function (tooltipItem, data) {
+            var datasetIndex = tooltipItem.datasetIndex;
+            var index = tooltipItem.index;
+            var datasetLabel = data.datasets[datasetIndex].label || "";
+            var originalValue = data.originalData[datasetIndex][index];
+            var rateValue = data.calculatedData[datasetIndex][index];
+
+            return "" + datasetLabel + ": " + rateValue + "% (" + originalValue + ")";
+        };
+
+        var reflectData = function (srcData, datasets) {
+            if (!srcData) return;
+
+            srcData.forEach(function (data, i) {
+                datasets[i].data = data;
+            });
+        };
+
+        var Stacked100Plugin = {
+            id: "stacked100",
+
+            beforeInit: function (chartInstance, pluginOptions) {
+                if (!pluginOptions.enable) return;
+
+                var xAxes = chartInstance.options.scales.xAxes;
+                var yAxes = chartInstance.options.scales.yAxes;
+                var isVertical = chartInstance.config.type === "bar" || chartInstance.config.type === "line";
+
+                [xAxes, yAxes].forEach(function (axes) {
+                    axes.forEach(function (hash) {
+                        hash.stacked = true;
+                    });
+                });
+                (isVertical ? yAxes : xAxes).forEach(function (hash) {
+                    hash.ticks.min = 0;
+                    hash.ticks.max = 100;
+                });
+
+                chartInstance.options.tooltips.callbacks.label = tooltipLabel;
+            },
+
+            beforeDatasetsUpdate: function (chartInstance, pluginOptions) {
+                if (!pluginOptions.enable) return;
+
+                setOriginalData(chartInstance.data);
+                calculateRate(chartInstance.data);
+                reflectData(chartInstance.data.calculatedData, chartInstance.data.datasets);
+            },
+
+            afterDatasetsUpdate: function (chartInstance, pluginOptions) {
+                if (!pluginOptions.enable) return;
+
+                reflectData(chartInstance.data.originalData, chartInstance.data.datasets);
+            }
+        };
+
+        Chart.pluginService.register(Stacked100Plugin);
+    }.call(this, Chart));
+</script>
+
+<script>
+    $(function () {
+        var tbody = $('#table-metrics tbody');
+        var transactions = $('.each-page-transaction');
+
+        var records = [];
+
+        transactions.each(function () {
+            var metricsList = $(this).find('.metrics');
+
+            var first = metricsList.first();
+            var last = metricsList.last();
+
+            var status = (function (elm) {
+                switch (elm.data('event-name')) {
+                    case 'submit':
+                        return 'complete';
+                    case 'unload':
+                        return 'leave';
+                    default:
+                        return 'staying';
+                }
+            })(last);
+            // 同一トランザクション内は同じパスのはずなので, 任意の要素から取り出す
+            var path = first.data('path');
+            var total = ( new Date(last.data('client-at')).getTime() - new Date(first.data('client-at')).getTime() ) / 1000;
+
+            var datasets = new Map();
+
+            var currentInput = '';
+            var startAt = 0;
+
+            metricsList.each(function () {
+                var metrics = $(this);
+
+                var inputName = metrics.data('input-name');
+                var eventName = metrics.data('event-name');
+                var clientAt = metrics.data('client-at');
+
+                if (inputName === 'metrixir.page') {
+                    return;
+                }
+
+                switch (eventName) {
+                    case 'focus':
+                        if (currentInput !== '') {
+                            console.warn('focus: invalid order of input.', currentInput);
+                            return;
+                        }
+                        currentInput = inputName;
+                        startAt = new Date(clientAt).getTime();
+                        return;
+
+                    case 'blur':
+                        if (currentInput === inputName && startAt !== 0) {
+                            var clientTime = new Date(clientAt).getTime();
+                            var total = datasets.has(inputName) ? datasets.get(inputName) + (clientTime - startAt) : (clientTime - startAt);
+
+                            datasets.set(inputName, total);
+
+                        } else {
+                            console.warn('blur: invalid order of input.', currentInput, inputName, startAt);
+                        }
+                        currentInput = '';
+                        startAt = 0;
+
+                        return;
+                    default:
+                        console.warn('invalid event.', eventName);
+
+                }
+            });
+
+            records.push({status: status, path: path, datasets: datasets, total: total});
+        });
+
+        $.each(records, function (index, record) {
+            var statusLabel = (function (status) {
+                return $('<span/>').addClass('badge badge-' + status).text(status);
+            })(record.status);
+            var detail = $('<canvas/>').addClass('chart-detail');
+
+            var contents = [
+                statusLabel,
+                record.path,
+                detail,
+                Math.round(record.total)
+            ];
+            var tr = $('<tr/>');
+
+            $.each(contents, function (i, content) {
+                tr.append($('<td/>').append(content));
+            });
+            tbody.append(tr);
+
+            detail.data('chart', (function (datasets) {
+                var chartDatasets = {
+                    type: 'horizontalBar',
+                    data: {
+                        labels: ['time'],
+                        datasets: []
+                    },
+                    options: {stacked: "100%"}
+                };
+
+                datasets.forEach(function (value, key) {
+                    if (datasets.hasOwnProperty(key)) return;
+
+                    chartDatasets.data.datasets.push({
+                        label: key,
+                        data: [value],
+                        backgroundColor: "rgba(244, 143, 177, 0.6)"
+                    });
+                });
+                return chartDatasets;
+            })(record.datasets));
+        });
+
+        $('.chart-detail').each(function () {
+            var detail = $(this);
+
+            new Chart(detail[0], detail.data('chart'));
+        });
+    });
+</script>
 </html>
