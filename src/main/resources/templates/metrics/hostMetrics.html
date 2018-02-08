@@ -5,7 +5,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+    <link rel="stylesheet"
+          href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
           integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
           crossorigin="anonymous">
     <style>
@@ -77,113 +78,16 @@
         integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
         crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.1/Chart.min.js"></script>
-<script>
-    (function (Chart) {
-        var cloneArray = function (srcAry) {
-            var dstAry = [];
-            var length = srcAry.length;
-
-            for (var i = 0; i < length; i++) {
-                dstAry.push(srcAry[i]);
-            }
-            return dstAry;
-        };
-
-        var setOriginalData = function (data) {
-            data.originalData = data.datasets.map(function (dataset) {
-                return cloneArray(dataset.data);
-            });
-        };
-
-        // set calculated rate (xx%) to data.calculatedData
-        var calculateRate = function (data) {
-            var visibles = data.datasets.map(function (dataset) {
-                if (!dataset._meta) return true;
-
-                for (var i in dataset._meta) {
-                    return !dataset._meta[i].hidden;
-                }
-            });
-
-            var totals = Array.apply(null, new Array(data.datasets[0].data.length)).map(function (el, i) {
-                return data.datasets.reduce(function (sum, dataset, j) {
-                    var key = dataset.stack;
-                    if (!sum[key]) sum[key] = 0;
-                    sum[key] += dataset.data[i] * visibles[j];
-
-                    return sum;
-                }, {});
-            });
-
-            data.calculatedData = data.datasets.map(function (dataset, i) {
-                return dataset.data.map(function (val, i) {
-                    var total = totals[i][dataset.stack];
-                    return val && total ? Math.round(val * 1000 / total) / 10 : 0;
-                });
-            });
-        };
-
-        var tooltipLabel = function (tooltipItem, data) {
-            var datasetIndex = tooltipItem.datasetIndex;
-            var index = tooltipItem.index;
-            var datasetLabel = data.datasets[datasetIndex].label || "";
-            var originalValue = data.originalData[datasetIndex][index];
-            var rateValue = data.calculatedData[datasetIndex][index];
-
-            return "" + datasetLabel + ": " + rateValue + "% (" + originalValue + ")";
-        };
-
-        var reflectData = function (srcData, datasets) {
-            if (!srcData) return;
-
-            srcData.forEach(function (data, i) {
-                datasets[i].data = data;
-            });
-        };
-
-        var Stacked100Plugin = {
-            id: "stacked100",
-
-            beforeInit: function (chartInstance, pluginOptions) {
-                if (!pluginOptions.enable) return;
-
-                var xAxes = chartInstance.options.scales.xAxes;
-                var yAxes = chartInstance.options.scales.yAxes;
-                var isVertical = chartInstance.config.type === "bar" || chartInstance.config.type === "line";
-
-                [xAxes, yAxes].forEach(function (axes) {
-                    axes.forEach(function (hash) {
-                        hash.stacked = true;
-                    });
-                });
-                (isVertical ? yAxes : xAxes).forEach(function (hash) {
-                    hash.ticks.min = 0;
-                    hash.ticks.max = 100;
-                });
-
-                chartInstance.options.tooltips.callbacks.label = tooltipLabel;
-            },
-
-            beforeDatasetsUpdate: function (chartInstance, pluginOptions) {
-                if (!pluginOptions.enable) return;
-
-                setOriginalData(chartInstance.data);
-                calculateRate(chartInstance.data);
-                reflectData(chartInstance.data.calculatedData, chartInstance.data.datasets);
-            },
-
-            afterDatasetsUpdate: function (chartInstance, pluginOptions) {
-                if (!pluginOptions.enable) return;
-
-                reflectData(chartInstance.data.originalData, chartInstance.data.datasets);
-            }
-        };
-
-        Chart.pluginService.register(Stacked100Plugin);
-    }.call(this, Chart));
-</script>
 
 <script>
+    var COLOR_PALLET = [
+        '#55efc4', '#00b894', '#ffeaa7', '#fdcb6e',
+        '#81ecec', '#00cec9', '#fab1a0', '#e17055',
+        '#74b9ff', '#0984e3', '#ff7675', '#d63031',
+        '#a29bfe', '#6c5ce7', '#fd79a8', '#e84393',
+        '#dfe6e9', '#b2bec3', '#636e72', '#2d3436'
+    ];
+
     $(function () {
         var tbody = $('#table-metrics tbody');
         var transactions = $('.each-page-transaction');
@@ -208,7 +112,7 @@
             })(last);
             // 同一トランザクション内は同じパスのはずなので, 任意の要素から取り出す
             var path = first.data('path');
-            var total = ( new Date(last.data('client-at')).getTime() - new Date(first.data('client-at')).getTime() ) / 1000;
+            var total = (new Date(last.data('client-at')).getTime() - new Date(first.data('client-at')).getTime()) / 1000;
 
             var datasets = new Map();
 
@@ -268,7 +172,7 @@
             var contents = [
                 statusLabel,
                 record.path,
-                detail,
+                $('<div style="width: 350px;"/>').append(detail),
                 Math.round(record.total)
             ];
             var tr = $('<tr/>');
@@ -280,22 +184,31 @@
 
             detail.data('chart', (function (datasets) {
                 var chartDatasets = {
-                    type: 'horizontalBar',
+                    type: 'doughnut',
                     data: {
-                        labels: ['time'],
-                        datasets: []
+                        labels: [],
+                        datasets: [{data: [], backgroundColor: []}]
                     },
-                    options: {stacked: "100%"}
+                    options: {
+                        legend: {
+                            display: true,
+                            position: 'right',
+                            labels: {
+                                fontSize: 8
+                            }
+                        }
+                    }
                 };
 
+                var i = 0;
                 datasets.forEach(function (value, key) {
                     if (datasets.hasOwnProperty(key)) return;
 
-                    chartDatasets.data.datasets.push({
-                        label: key,
-                        data: [value],
-                        backgroundColor: "rgba(244, 143, 177, 0.6)"
-                    });
+                    chartDatasets.data.labels.push(key);
+                    chartDatasets.data.datasets[0].data.push(value / 1000);
+                    chartDatasets.data.datasets[0].backgroundColor.push(COLOR_PALLET[i]);
+
+                    i++;
                 });
                 return chartDatasets;
             })(record.datasets));
