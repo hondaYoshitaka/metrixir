@@ -49,9 +49,16 @@
             background-color: #d63031;
         }
 
+        .path {
+            font-weight: bold;
+        }
+
         .score-total {
             font-size: 1.5rem;
-            font-weight: bold;
+        }
+
+        .wrap-rate-input {
+            font-size: .9rem;
         }
 
         .title-chart {
@@ -82,7 +89,7 @@
                   th:data-event-name="*{event}" th:data-client-at="*{clientEventAt}"></span>
 
             <div class="col-3">
-                <div class="mb-3">
+                <div class="mb-4">
                     <span class="status mr-1"></span>
                     <span class="path"></span>
                 </div>
@@ -92,14 +99,20 @@
                         <td><span class="score-total ml-1"></span> sec</td>
                     </tr>
                     <tr>
-                        <td colspan="2"></td>
+                        <td colspan="2">　</td>
                     </tr>
                     <tr>
-                        <td>input:</td>
+                        <td>input</td>
                         <td>
                             <span class="score-input ml-1"></span> sec
-                            (<span class="rate-input ml-1"></span> %)
+                            <span class="wrap-rate-input">
+                                (<span class="rate-input ml-1"></span> %)
+                            </span>
                         </td>
+                    </tr>
+                    <tr>
+                        <td>user</td>
+                        <td><span class="visitor-token">(hash)</span></td>
                     </tr>
                 </table>
             </div>
@@ -136,7 +149,12 @@
         '#81ecec', '#00cec9', '#fab1a0', '#e17055',
         '#74b9ff', '#0984e3', '#ff7675', '#d63031',
         '#a29bfe', '#6c5ce7', '#fd79a8', '#e84393',
-        '#dfe6e9', '#b2bec3', '#636e72', '#2d3436'
+//        '#dfe6e9', '#b2bec3', '#636e72', '#2d3436',
+        '#FFC312', '#F79F1F', '#EE5A24', '#EA2027',
+        '#C4E538', '#A3CB38', '#009432', '#006266',
+        '#12CBC4', '#1289A7', '#0652DD', '#1B1464',
+        '#FDA7DF', '#D980FA', '#9980FA', '#5758BB',
+        '#ED4C67', '#B53471', '#833471', '#6F1E51'
     ];
     var usedColorMap = new Map();
 
