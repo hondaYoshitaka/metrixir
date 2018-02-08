@@ -10,8 +10,28 @@
           integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
           crossorigin="anonymous">
     <style>
+        .each-page-transaction {
+            margin-top: 1rem;
+            padding: .5rem 0rem;
+            border-bottom: 1px solid #d1d3d6;
+            border-left: 3px solid gray;
+        }
+
+        .each-page-transaction.status-staying {
+            border-left-color: #fdcb6e;
+        }
+
+        .each-page-transaction.status-complete {
+            border-left-color: #0984e3;
+        }
+
+        .each-page-transaction.status-leave {
+            border-left-color: #d63031;
+        }
+
         .badge {
             min-width: 4rem;
+            vertical-align: text-bottom;
         }
 
         .badge-staying {
@@ -28,6 +48,18 @@
             color: #fff;
             background-color: #d63031;
         }
+
+        .score-total {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .title-chart {
+            display: block;
+            text-align: center;
+            color: #6c757d;
+            margin-bottom: .5rem;
+        }
     </style>
 
     <title>Host Metrics | Metrixir</title>
@@ -42,27 +74,44 @@
         </div>
     </div>
 
-    <section class="row">
-        <div class="col-12">
-
-            <div class="each-page-transaction" th:each="entry : ${metricsMap}">
-            <span class="metrics"
+    <section id="area-metrics">
+        <div class="row each-page-transaction" th:each="entry : ${metricsMap}">
+            <span class="single-metric"
                   th:each="metrics : ${entry.value}" th:object="${metrics}"
                   th:data-path="*{path}" th:data-input-name="*{name}"
                   th:data-event-name="*{event}" th:data-client-at="*{clientEventAt}"></span>
-            </div>
 
-            <table id="table-metrics" class="table">
-                <thead>
-                <tr>
-                    <th style="width: 5rem;">status</th>
-                    <th style="width: 10rem;">path</th>
-                    <th>detail</th>
-                    <th style="width: 7rem;">total (sec)</th>
-                </tr>
-                </thead>
-                <tbody></tbody>
-            </table>
+            <div class="col-3">
+                <div class="mb-3">
+                    <span class="status mr-1"></span>
+                    <span class="path"></span>
+                </div>
+                <table>
+                    <tr>
+                        <td>score:</td>
+                        <td><span class="score-total ml-1"></span> sec</td>
+                    </tr>
+                    <tr>
+                        <td colspan="2"></td>
+                    </tr>
+                    <tr>
+                        <td>input:</td>
+                        <td>
+                            <span class="score-input ml-1"></span> sec
+                            (<span class="rate-input ml-1"></span> %)
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="col-4">
+                <span class="title-chart">input time</span>
+                <canvas class="chart-process-times"></canvas>
+            </div>
+            <div class="col-1"></div>
+            <div class="col-4">
+                <span class="title-chart">focus count</span>
+                <canvas class="chart-click-counts"></canvas>
+            </div>
         </div>
     </section>
 </div>
@@ -80,6 +129,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.1/Chart.min.js"></script>
 
 <script>
+    Chart.defaults.global.defaultFontSize = 8;
+
     var COLOR_PALLET = [
         '#55efc4', '#00b894', '#ffeaa7', '#fdcb6e',
         '#81ecec', '#00cec9', '#fab1a0', '#e17055',
@@ -87,15 +138,28 @@
         '#a29bfe', '#6c5ce7', '#fd79a8', '#e84393',
         '#dfe6e9', '#b2bec3', '#636e72', '#2d3436'
     ];
+    var usedColorMap = new Map();
+
+    $.extend({
+        chooseColor: function (key) {
+            if (key === 'no data') {
+                return '#a9a9a9';
+            }
+            if (usedColorMap.has(key)) {
+                return usedColorMap.get(key);
+            }
+            var color = COLOR_PALLET[usedColorMap.size];
+            usedColorMap.set(key, color);
+
+            return color;
+        }
+    });
 
     $(function () {
-        var tbody = $('#table-metrics tbody');
-        var transactions = $('.each-page-transaction');
+        $('.each-page-transaction').each(function () {
+            var col = $(this);
 
-        var records = [];
-
-        transactions.each(function () {
-            var metricsList = $(this).find('.metrics');
+            var metricsList = col.find('.single-metric');
 
             var first = metricsList.first();
             var last = metricsList.last();
@@ -112,10 +176,10 @@
             })(last);
             // 同一トランザクション内は同じパスのはずなので, 任意の要素から取り出す
             var path = first.data('path');
-            var total = (new Date(last.data('client-at')).getTime() - new Date(first.data('client-at')).getTime()) / 1000;
+            var totalScore = (new Date(last.data('client-at')).getTime() - new Date(first.data('client-at')).getTime());
 
+            // トランザクション内のmetricsをかき集める
             var datasets = new Map();
-
             var currentInput = '';
             var startAt = 0;
 
@@ -143,10 +207,12 @@
                     case 'blur':
                         if (currentInput === inputName && startAt !== 0) {
                             var clientTime = new Date(clientAt).getTime();
-                            var total = datasets.has(inputName) ? datasets.get(inputName) + (clientTime - startAt) : (clientTime - startAt);
 
-                            datasets.set(inputName, total);
-
+                            if (datasets.has(inputName)) {
+                                datasets.get(inputName).push(clientTime - startAt);
+                            } else {
+                                datasets.set(inputName, [clientTime - startAt]);
+                            }
                         } else {
                             console.warn('blur: invalid order of input.', currentInput, inputName, startAt);
                         }
@@ -159,62 +225,101 @@
 
                 }
             });
+            if (datasets.size === 0) {
+                datasets.set('no data', [1]);
+            }
 
-            records.push({status: status, path: path, datasets: datasets, total: total});
-        });
+            // 結果行に当てはめていく
+            col.addClass('status-' + status);
 
-        $.each(records, function (index, record) {
-            var statusLabel = (function (status) {
-                return $('<span/>').addClass('badge badge-' + status).text(status);
-            })(record.status);
-            var detail = $('<canvas/>').addClass('chart-detail');
+            col.find('.status').addClass('badge badge-' + status).text(status);
+            col.find('.path').text(path);
+            col.find('.score-total').text(Math.round(totalScore / 1000));
 
-            var contents = [
-                statusLabel,
-                record.path,
-                $('<div style="width: 350px;"/>').append(detail),
-                Math.round(record.total)
-            ];
-            var tr = $('<tr/>');
+            var inputScore = 0;
+            datasets.forEach(function (value, key) {
+                if (datasets.hasOwnProperty(key)) return;
 
-            $.each(contents, function (i, content) {
-                tr.append($('<td/>').append(content));
+                inputScore += value.reduce(function (prev, current, i, arr) {
+                    return prev + current;
+                })
             });
-            tbody.append(tr);
+            col.find('.score-input').text(inputScore / 1000);
+            col.find('.rate-input').text(totalScore !== 0 ? Math.round((inputScore / totalScore) * 100) : '-');
 
-            detail.data('chart', (function (datasets) {
-                var chartDatasets = {
-                    type: 'doughnut',
-                    data: {
-                        labels: [],
-                        datasets: [{data: [], backgroundColor: []}]
-                    },
-                    options: {
-                        legend: {
-                            display: true,
-                            position: 'right',
-                            labels: {
-                                fontSize: 8
+            col.find('.chart-process-times')
+                .data('chart', (function (data) {
+                    var chartDatasets = {
+                        type: 'doughnut',
+                        data: {
+                            labels: [],
+                            datasets: [{data: [], backgroundColor: []}]
+                        },
+                        options: {
+                            legend: {
+                                display: true,
+                                position: 'left'
                             }
                         }
-                    }
-                };
+                    };
 
-                var i = 0;
-                datasets.forEach(function (value, key) {
-                    if (datasets.hasOwnProperty(key)) return;
+                    data.forEach(function (value, key) {
+                        if (data.hasOwnProperty(key)) return;
 
-                    chartDatasets.data.labels.push(key);
-                    chartDatasets.data.datasets[0].data.push(value / 1000);
-                    chartDatasets.data.datasets[0].backgroundColor.push(COLOR_PALLET[i]);
+                        var total = value.reduce(function (prev, current, i, arr) {
+                            return prev + current;
+                        });
+                        chartDatasets.data.labels.push(key);
+                        chartDatasets.data.datasets[0].data.push(total / 1000);
+                        chartDatasets.data.datasets[0].backgroundColor.push($.chooseColor(key));
+                    });
+                    return chartDatasets;
 
-                    i++;
-                });
-                return chartDatasets;
-            })(record.datasets));
+                })(datasets));
+
+            col.find('.chart-click-counts')
+                .data('chart', (function (data) {
+                    var chartDatasets = {
+                        type: 'bar',
+                        data: {
+                            labels: [],
+                            datasets: [{data: [], backgroundColor: []}]
+                        },
+                        options: {
+                            legend: {
+                                display: false
+                            },
+                            scales: {
+                                yAxes: [{
+                                    ticks: {
+                                        min: 0,
+                                        max: 5,
+                                        stepSize: 1
+                                    }
+                                }]
+                            }
+                        }
+                    };
+
+                    data.forEach(function (value, key) {
+                        if (data.hasOwnProperty(key)) return;
+
+                        var count = value.length;
+                        chartDatasets.data.labels.push(key);
+                        chartDatasets.data.datasets[0].data.push(count);
+                        chartDatasets.data.datasets[0].backgroundColor.push($.chooseColor(key));
+                    });
+                    return chartDatasets;
+
+                })(datasets));
         });
 
-        $('.chart-detail').each(function () {
+        $('.chart-click-counts').each(function () {
+            var detail = $(this);
+
+            new Chart(detail[0], detail.data('chart'));
+        });
+        $('.chart-process-times').each(function () {
             var detail = $(this);
 
             new Chart(detail[0], detail.data('chart'));
