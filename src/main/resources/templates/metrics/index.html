@@ -11,11 +11,8 @@
 <div layout:fragment="content">
     <div class="row">
         <div class="col-12">
-            <h2>
-                <span th:text="${host.host}" style="vertical-align: middle;"></span>
-                <span class="badge badge-info ml-2" th:text="${host.tag}"
-                      style="font-size: 12px; vertical-align: middle;"></span>
-            </h2>
+            <h1 th:text="${host.host}"></h1>
+            <span class="badge badge-info" th:text="${host.tag}"></span>
         </div>
     </div>
 
