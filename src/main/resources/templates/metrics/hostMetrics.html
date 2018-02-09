@@ -85,6 +85,10 @@
             font-weight: bold;
         }
 
+        .visit-time {
+            font-size: .9rem;
+        }
+
         .score-total {
             font-size: 1.5rem;
         }
@@ -139,7 +143,7 @@
                 <table>
                     <tr>
                         <td>score:</td>
-                        <td><span class="score-total ml-1"></span> sec</td>
+                        <td><span class="score-total ml-1 mr-1"></span>sec</td>
                     </tr>
                     <tr>
                         <td colspan="2">　</td>
@@ -147,15 +151,19 @@
                     <tr>
                         <td>input</td>
                         <td>
-                            <span class="score-input ml-1"></span> sec
+                            <span class="score-input mr-1"></span>sec
                             <span class="wrap-rate-input">
-                                (<span class="rate-input ml-1"></span> %)
+                                (<span class="rate-input mr-1"></span>%)
                             </span>
                         </td>
                     </tr>
                     <tr>
+                        <td>visit</td>
+                        <td><span class="visit-time"></span></td>
+                    </tr>
+                    <tr>
                         <td>user</td>
-                        <td><span class="visitor-token">(hash)</span></td>
+                        <td><span class="visitor-token"></span></td>
                     </tr>
                 </table>
             </div>
@@ -238,6 +246,8 @@
             // 同一トランザクション内は同じ訪問者/パスのはずなので, 任意の要素から取り出す
             var visitor = first.data('visitor');
             var path = first.data('path');
+            var visitTime = first.data('client-at');
+
             var totalScore = (new Date(last.data('client-at')).getTime() - new Date(first.data('client-at')).getTime());
 
             // トランザクション内のmetricsをかき集める
@@ -299,6 +309,7 @@
                 .text(visitor.split('-')[0])
                 .data({content: visitor, placement: "top"})
                 .popover({trigger: 'hover'});
+            col.find('.visit-time').text(visitTime.split('.')[0]);
             col.find('.path').text(path);
             col.find('.score-total').text(Math.round(totalScore / 1000));
 
