@@ -1,4 +1,12 @@
-SELECT m.*
+SELECT
+  m.id,
+  m.transaction_id,
+  m.name,
+  m.event,
+  m.path,
+  m.client_event_at,
+  m.created_at,
+  v.visitor_id
 
 FROM metrics m
 

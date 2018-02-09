@@ -13,6 +13,7 @@ import example.metrixir.dao.metrics.VisitorMetricsDao;
 import example.metrixir.dao.user.VisitorDao;
 import example.metrixir.model.entity.client.ClientHost;
 import example.metrixir.model.entity.metrics.Metrics;
+import example.metrixir.model.entity.metrics.MetricsWithVisitor;
 import example.metrixir.model.entity.metrics.VisitorMetrics;
 import example.metrixir.model.entity.user.Visitor;
 import example.metrixir.model.form.metrics.HostMetricsFetchForm;
@@ -89,7 +90,7 @@ public class MetricsController {
     }
 
     public HttpResponse showHostMetrics(final HostMetricsFetchForm form) {
-        final List<Metrics> metricsList = metricsDao.findAllByPage(form.getHostId());
+        final List<MetricsWithVisitor> metricsList = metricsDao.findAllByPage(form.getHostId());
 
         final Object[] params = {
                 "host", clientHostDao.findById(form.getHostId()),

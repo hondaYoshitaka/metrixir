@@ -49,6 +49,13 @@
             background-color: #d63031;
         }
 
+        .badge.badge-visitor {
+            border: 1px solid #636c72;
+            color: #636c72;
+            font-weight: normal;
+            vertical-align: baseline;
+        }
+
         .path {
             font-weight: bold;
         }
@@ -66,6 +73,10 @@
             text-align: center;
             color: #6c757d;
             margin-bottom: .5rem;
+        }
+
+        .popover {
+            font-size: .6rem;
         }
     </style>
 
@@ -85,6 +96,7 @@
         <div class="row each-page-transaction" th:each="entry : ${metricsMap}">
             <span class="single-metric"
                   th:each="metrics : ${entry.value}" th:object="${metrics}"
+                  th:data-visitor="*{visitorId}"
                   th:data-path="*{path}" th:data-input-name="*{name}"
                   th:data-event-name="*{event}" th:data-client-at="*{clientEventAt}"></span>
 
@@ -192,7 +204,8 @@
                         return 'staying';
                 }
             })(last);
-            // 同一トランザクション内は同じパスのはずなので, 任意の要素から取り出す
+            // 同一トランザクション内は同じ訪問者/パスのはずなので, 任意の要素から取り出す
+            var visitor = first.data('visitor');
             var path = first.data('path');
             var totalScore = (new Date(last.data('client-at')).getTime() - new Date(first.data('client-at')).getTime());
 
@@ -250,7 +263,11 @@
             // 結果行に当てはめていく
             col.addClass('status-' + status);
 
-            col.find('.status').addClass('badge badge-' + status).text(status);
+            col.find('.status').addClass('badge badge-pill badge-' + status).text(status);
+            col.find('.visitor-token').addClass('badge badge-visitor')
+                .text(visitor.split('-')[0])
+                .data({content: visitor, placement: "top"})
+                .popover({trigger: 'hover'});
             col.find('.path').text(path);
             col.find('.score-total').text(Math.round(totalScore / 1000));
 
