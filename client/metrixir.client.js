@@ -33,7 +33,7 @@ METRIXIR.page = Object.assign({}, {
 
 }, METRIXIR.page);
 
-METRIXIR.postEventLog = function (inputName, eventName) {
+METRIXIR.postEventLog = function (inputName, eventName, onload, onerror) {
     var config = METRIXIR.server;
 
     var postData = Object.assign({
@@ -52,13 +52,16 @@ METRIXIR.postEventLog = function (inputName, eventName) {
     xhr.setRequestHeader('Content-Type', 'application/json; charset=utf-8');
     xhr.withCredentials = true;
 
+    xhr.onload = onload;
+    xhr.onerror = onerror;
+    xhr.timeout = 5000;
+
     xhr.send(JSON.stringify(postData));
 };
 
 
-METRIXIR.handleBeforeunload = function (event) {
+METRIXIR.handleBeforeunload = function (e) {
     METRIXIR.postEventLog('metrixir.page', 'unload');
-
 };
 
 METRIXIR.handleLoad = function () {
@@ -88,18 +91,26 @@ METRIXIR.handleLoad = function () {
     for (var k = 0; k < forms.length; k++) {
         var form = forms[k];
 
-        form.onsubmit = function () {
+        form.addEventListener("submit", function (e) {
+            var f = this;
+
+            e.preventDefault();
             // submit時にunloadイベントが走らないようにoffしておく
             window.removeEventListener('beforeunload', METRIXIR.handleBeforeunload);
 
-            METRIXIR.postEventLog('metrixir.page', 'submit');
-
-            return true;
-        }
+            METRIXIR.postEventLog('metrixir.page', 'submit',
+                function onload() {
+                    f.submit();
+                },
+                function onerror() {
+                    f.submit();
+                });
+            return false;
+        });
     }
-
     METRIXIR.postEventLog('metrixir.page', 'load');
-};
+}
+;
 
 window.addEventListener('beforeunload', METRIXIR.handleBeforeunload, false);
 window.addEventListener('load', METRIXIR.handleLoad, false);
