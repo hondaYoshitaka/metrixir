@@ -29,6 +29,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
+import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -71,6 +72,7 @@ public class MetricsController {
      *
      * @return view
      */
+    @Deprecated
     public HttpResponse index(final Parameters parameters) {
         final String tag = parameters.get("tag");
 
@@ -80,6 +82,7 @@ public class MetricsController {
                 new Object[]{"tag", tag, "visitors", visitors});
     }
 
+    @Deprecated
     public MetricsResponseDto fetchMetrics(final Parameters parameters) {
         final String visitorId = parameters.get("visitorId");
         final String hostTag = parameters.get("tag");
@@ -91,10 +94,27 @@ public class MetricsController {
 
     public HttpResponse showHostMetrics(final HostMetricsFetchForm form) {
         final List<MetricsWithVisitor> metricsList = metricsDao.findAllByPage(form.getHostId());
-
+        final LinkedHashMap<String, List<MetricsWithVisitor>> sortedMetricsMap =
+            metricsList.stream().collect(groupingBy(Metrics::getTransactionId))
+                       .entrySet().stream()
+                       .sorted(Entry.comparingByValue((list1, list2) -> {
+                           final LocalDateTime time1 = list1.get(0).getClientEventAt();
+                           final LocalDateTime time2 = list2.get(0).getClientEventAt();
+                           if (time1.isEqual(time2)) {
+                               return 0;
+                           } else if (time1.isAfter(time2)) {
+                               return -1;
+                           } else {
+                               return 1;
+                           }
+                       }))
+                       .collect(Collectors.toMap(Entry::getKey,
+                                                 Entry::getValue,
+                                                 (oldValue, newValue) -> oldValue,
+                                                 LinkedHashMap::new));
         final Object[] params = {
-                "host", clientHostDao.findById(form.getHostId()),
-                "metricsMap", metricsList.stream().collect(groupingBy(Metrics::getTransactionId))};
+            "host", clientHostDao.findById(form.getHostId()),
+            "metricsMap", sortedMetricsMap};
 
         return templateEngine.render("metrics/hostMetrics", params);
     }
