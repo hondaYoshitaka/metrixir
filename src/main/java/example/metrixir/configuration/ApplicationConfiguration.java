@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.common.collect.ImmutableSet;
 import enkan.Application;
+import enkan.Env;
 import enkan.application.WebApplication;
 import enkan.endpoint.ResourceEndpoint;
 import enkan.middleware.*;
@@ -32,29 +33,18 @@ import static enkan.util.Predicates.envIn;
 public class ApplicationConfiguration implements enkan.config.ApplicationFactory {
 
     private static final Set<String> CORS_ORIGINS = ImmutableSet.of(
-            "http://localhost:3000"
-    );
+            Env.getString("CORS_ORIGIN", "http://localhost:3000"));
 
     @Override
     public Application create(ComponentInjector injector) {
         final WebApplication app = new WebApplication();
 
-        final ObjectMapper mapper = new ObjectMapper();
-        mapper.registerModule(new JavaTimeModule());
-        mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
-        mapper.configure(DeserializationFeature.UNWRAP_SINGLE_VALUE_ARRAYS, true);
-        mapper.configure(DeserializationFeature.FAIL_ON_IGNORED_PROPERTIES, false);
-        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-
         final Routes routes = Routes.define(r -> {
             r.scope("", view -> {
                 view.get("/").to(IndexController.class, "index");
-
-                view.get("/metrics").to(MetricsController.class, "index");
-                view.get("/hosts/:hostId/metrics").to(MetricsController.class, "showHostMetrics");
+                view.get("/hosts/:hostId/metrics").to(MetricsController.class, "index");
             });
             r.scope("/api", api -> {
-                api.get("/metrics").to(MetricsController.class, "fetchMetrics");
                 api.post("/metrics").to(MetricsController.class, "create");
             });
         }).compile();
@@ -90,15 +80,28 @@ public class ApplicationConfiguration implements enkan.config.ApplicationFactory
         app.use(new DomaTransactionMiddleware<>());
         app.use(new FormMiddleware());
 
-        app.use(builder(new SerDesMiddleware())
-                .set(SerDesMiddleware::setBodyWriters,
-                        new MessageBodyWriter[]{new ToStringBodyWriter(),
-                                new JsonBodyWriter(mapper)})
-                .set(SerDesMiddleware::setBodyReaders, new JsonBodyReader(mapper))
-                .build());
+        final ObjectMapper mapper = createObjectMapper();
+        app.use(createSerDesMiddleware(mapper));
         app.use(new ValidateBodyMiddleware<>());
         app.use(new ControllerInvokerMiddleware(injector));
 
         return app;
+    }
+
+    private ObjectMapper createObjectMapper() {
+        return new ObjectMapper()
+                .registerModule(new JavaTimeModule())
+                .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
+                .configure(DeserializationFeature.UNWRAP_SINGLE_VALUE_ARRAYS, true)
+                .configure(DeserializationFeature.FAIL_ON_IGNORED_PROPERTIES, false)
+                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    }
+
+    private SerDesMiddleware createSerDesMiddleware(final ObjectMapper mapper) {
+        return builder(new SerDesMiddleware())
+                .set(SerDesMiddleware::setBodyWriters, new MessageBodyWriter[]{
+                        new ToStringBodyWriter(), new JsonBodyWriter(mapper)})
+                .set(SerDesMiddleware::setBodyReaders, new JsonBodyReader(mapper))
+                .build();
     }
 }

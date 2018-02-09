@@ -11,10 +11,6 @@ import java.util.List;
 
 @Dao(config = DatabaseConfiguration.class)
 public interface MetricsDao {
-
-    @Select
-    List<Metrics> findVisitorMetricsByTag(final String visitorId, final String tag);
-
     @Select
     List<MetricsWithVisitor> findAllByPage(final Long hostId);
 

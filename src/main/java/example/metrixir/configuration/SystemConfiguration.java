@@ -7,9 +7,9 @@ import enkan.component.doma2.DomaProvider;
 import enkan.component.flyway.FlywayMigration;
 import enkan.component.hikaricp.HikariCPComponent;
 import enkan.component.jackson.JacksonBeansConverter;
-import enkan.component.thymeleaf.ThymeleafTemplateEngine;
 import enkan.component.undertow.UndertowComponent;
 import enkan.system.EnkanSystem;
+import example.metrixir.component.thymeleaf.ThymeleafLayoutTemplateEngine;
 
 import static enkan.component.ComponentRelationship.component;
 import static enkan.util.BeanBuilder.builder;
@@ -22,7 +22,7 @@ public class SystemConfiguration implements enkan.config.EnkanSystemFactory {
                 "doma", new DomaProvider(),
                 "jackson", new JacksonBeansConverter(),
                 "flyway", new FlywayMigration(),
-                "template", new ThymeleafTemplateEngine(),
+                "template", new ThymeleafLayoutTemplateEngine(),
                 "datasource", new HikariCPComponent(OptionMap.of(
                         "uri", Env.getString("DATASOURCE_URL", "jdbc:postgresql://localhost/metrixir"),
                         "username", Env.getString("DATASOURCE_USERNAME", "dba"),

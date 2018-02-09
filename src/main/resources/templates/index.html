@@ -1,19 +1,21 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:th="http://www.thymeleaf.org">
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorator="layout/layout">
 <head>
-    <link rel="stylesheet" href="/assets/css/bootstrap.min.css">
-
-    <script src="/assets/js/jquery-3.2.1.min.js"></script>
-
-    <title>トップ | Metrixir</title>
+    <title>トップ</title>
 </head>
+
 <body>
-<div class="container">
-    <h1>ホスト一覧</h1>
+<div layout:fragment="content">
+    <div class="row">
+        <div class="col-12">
+            <h1>ホスト一覧</h1>
+        </div>
+    </div>
 
     <section class="row">
-
         <div class="list-group" style="width: 100%;">
             <a href="#"
                class="list-group-item list-group-item-action"

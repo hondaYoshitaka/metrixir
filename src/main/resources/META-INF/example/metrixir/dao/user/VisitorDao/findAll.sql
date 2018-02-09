@@ -1,5 +1,0 @@
-SELECT
-id
-
-FROM visitor
-;

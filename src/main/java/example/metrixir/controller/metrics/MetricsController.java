@@ -18,7 +18,6 @@ import example.metrixir.model.entity.metrics.VisitorMetrics;
 import example.metrixir.model.entity.user.Visitor;
 import example.metrixir.model.form.metrics.HostMetricsFetchForm;
 import example.metrixir.model.form.metrics.MetricsCreateForm;
-import example.metrixir.model.response.metrics.MetricsResponseDto;
 import kotowari.component.TemplateEngine;
 
 import javax.annotation.PostConstruct;
@@ -28,11 +27,13 @@ import javax.validation.constraints.NotNull;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import static java.util.stream.Collectors.groupingBy;
 
@@ -72,51 +73,31 @@ public class MetricsController {
      *
      * @return view
      */
-    @Deprecated
-    public HttpResponse index(final Parameters parameters) {
-        final String tag = parameters.get("tag");
-
-        final List<Visitor> visitors = visitorDao.findAllByTag(tag);
-
-        return templateEngine.render("metrics/index",
-                new Object[]{"tag", tag, "visitors", visitors});
-    }
-
-    @Deprecated
-    public MetricsResponseDto fetchMetrics(final Parameters parameters) {
-        final String visitorId = parameters.get("visitorId");
-        final String hostTag = parameters.get("tag");
-
-        final List<Metrics> metricsList = metricsDao.findVisitorMetricsByTag(visitorId, hostTag);
-
-        return createMetricsResponseDto(metricsList);
-    }
-
-    public HttpResponse showHostMetrics(final HostMetricsFetchForm form) {
+    public HttpResponse index(final HostMetricsFetchForm form) {
         final List<MetricsWithVisitor> metricsList = metricsDao.findAllByPage(form.getHostId());
         final LinkedHashMap<String, List<MetricsWithVisitor>> sortedMetricsMap =
-            metricsList.stream().collect(groupingBy(Metrics::getTransactionId))
-                       .entrySet().stream()
-                       .sorted(Entry.comparingByValue((list1, list2) -> {
-                           final LocalDateTime time1 = list1.get(0).getClientEventAt();
-                           final LocalDateTime time2 = list2.get(0).getClientEventAt();
-                           if (time1.isEqual(time2)) {
-                               return 0;
-                           } else if (time1.isAfter(time2)) {
-                               return -1;
-                           } else {
-                               return 1;
-                           }
-                       }))
-                       .collect(Collectors.toMap(Entry::getKey,
-                                                 Entry::getValue,
-                                                 (oldValue, newValue) -> oldValue,
-                                                 LinkedHashMap::new));
+                metricsList.stream().collect(groupingBy(Metrics::getTransactionId))
+                        .entrySet().stream()
+                        .sorted(Entry.comparingByValue((list1, list2) -> {
+                            final LocalDateTime time1 = list1.get(0).getClientEventAt();
+                            final LocalDateTime time2 = list2.get(0).getClientEventAt();
+                            if (time1.isEqual(time2)) {
+                                return 0;
+                            } else if (time1.isAfter(time2)) {
+                                return -1;
+                            } else {
+                                return 1;
+                            }
+                        }))
+                        .collect(Collectors.toMap(Entry::getKey,
+                                Entry::getValue,
+                                (oldValue, newValue) -> oldValue,
+                                LinkedHashMap::new));
         final Object[] params = {
-            "host", clientHostDao.findById(form.getHostId()),
-            "metricsMap", sortedMetricsMap};
+                "host", clientHostDao.findById(form.getHostId()),
+                "metricsMap", sortedMetricsMap};
 
-        return templateEngine.render("metrics/hostMetrics", params);
+        return templateEngine.render("metrics/index", params);
     }
 
     @Transactional
@@ -215,46 +196,4 @@ public class MetricsController {
         return cookie;
     }
 
-    /**
-     * HACK:
-     */
-    private MetricsResponseDto createMetricsResponseDto(final List<Metrics> metricsList) {
-        final MetricsResponseDto dto = new MetricsResponseDto();
-
-        if (metricsList.isEmpty()) {
-            return dto;
-        }
-        final Map<String, List<Metrics>> groupBy = metricsList.stream()
-                .collect(groupingBy(Metrics::getName));
-
-        for (final Map.Entry<String, List<Metrics>> entry : groupBy.entrySet()) {
-            // focus + blur
-            final List<MetricsResponseDto.MetricsDto> events = divide(entry.getValue(), 2)
-                    .stream()
-                    .filter(pair -> pair.size() == 2)
-                    .map(pair -> new MetricsResponseDto.MetricsDto(
-                            pair.get(0).getClientEventAt(),
-                            pair.get(1).getClientEventAt()))
-                    .collect(Collectors.toList());
-
-            dto.getMetricsMap().put(entry.getKey(), events);
-        }
-        return dto;
-    }
-
-    public static <T> List<List<T>> divide(List<T> origin, int size) {
-        if (origin == null || origin.isEmpty() || size <= 0) {
-            return Collections.emptyList();
-        }
-        int block = origin.size() / size + (origin.size() % size > 0 ? 1 : 0);
-
-        return IntStream.range(0, block)
-                .boxed()
-                .map(i -> {
-                    int start = i * size;
-                    int end = Math.min(start + size, origin.size());
-                    return origin.subList(start, end);
-                })
-                .collect(Collectors.toList());
-    }
 }
