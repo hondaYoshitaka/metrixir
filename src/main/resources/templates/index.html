@@ -18,7 +18,7 @@
             <a href="#"
                class="list-group-item list-group-item-action"
                th:each="host : ${clientHosts}" th:object="${host}"
-               th:href="@{metrics?tag=__*{tag}__}">
+               th:href="@{hosts/{id}/metrics(id=*{id})}">
                 <span th:text="*{host}"></span>
                 <span class="badge badge-info" th:text="*{tag}"></span>
             </a>

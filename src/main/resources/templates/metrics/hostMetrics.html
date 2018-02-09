@@ -10,11 +10,36 @@
           integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
           crossorigin="anonymous">
     <style>
+        body {
+            background: #f6f6f6;
+        }
+
+        nav.navbar {
+            background: #00b894;
+        }
+
+        nav.navbar .navbar-brand,
+        nav.navbar .navbar-brand:focus,
+        nav.navbar .navbar-brand:hover {
+            color: white;
+        }
+
+        nav.navbar .logo {
+            background: white;
+            color: #00b894;
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border-radius: 3px;
+            text-align: center;
+        }
+
         .each-page-transaction {
             margin-top: 1rem;
             padding: .5rem 0rem;
             border-bottom: 1px solid #d1d3d6;
             border-left: 3px solid gray;
+            background: white;
         }
 
         .each-page-transaction.status-staying {
@@ -84,11 +109,17 @@
 </head>
 
 <body>
+<nav class="navbar navbar-light bg-faded mb-3">
+    <a class="navbar-brand" href="/">
+        <span class="logo mr-2">M</span>
+        Metrixir
+    </a>
+</nav>
 <div class="container">
     <div class="row">
         <div class="col-12">
             <h2 th:text="${host.host}"></h2>
-            <h4 th:text="${host.tag}"></h4>
+            <span class="badge badge-info" th:text="${host.tag}"></span>
         </div>
     </div>
 
