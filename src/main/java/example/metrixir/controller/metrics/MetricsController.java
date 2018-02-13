@@ -11,6 +11,7 @@ import example.metrixir.dao.client.ClientHostDao;
 import example.metrixir.dao.metrics.MetricsDao;
 import example.metrixir.dao.metrics.VisitorMetricsDao;
 import example.metrixir.dao.user.VisitorDao;
+import example.metrixir.exception.UnexpectedCountException;
 import example.metrixir.model.entity.client.ClientHost;
 import example.metrixir.model.entity.metrics.Metrics;
 import example.metrixir.model.entity.metrics.MetricsWithVisitor;
@@ -120,7 +121,7 @@ public class MetricsController {
 
         final int metricsCount = metricsDao.insert(metrics);
         if (metricsCount != 1) {
-            throw new RuntimeException("expected count 1, but actual: " + metricsCount);
+            throw new UnexpectedCountException(1, metricsCount);
         }
 
         final VisitorMetrics relation = new VisitorMetrics();
@@ -130,7 +131,7 @@ public class MetricsController {
 
         final int relationCount = visitorMetricsDao.insert(relation);
         if (relationCount != 1) {
-            throw new RuntimeException("expected count 1, but actual: " + relationCount);
+            throw new UnexpectedCountException(1, relationCount);
         }
 
         final HttpResponse<String> response = HttpResponse.of("{}");
@@ -157,7 +158,7 @@ public class MetricsController {
 
         final int count = clientHostDao.insert(entity);
         if (count != 1) {
-            throw new RuntimeException("expected count 1, but actual: " + count);
+            throw new UnexpectedCountException(1, count);
         }
         return entity;
     }
@@ -179,7 +180,7 @@ public class MetricsController {
 
         final int count = visitorDao.insert(entity);
         if (count != 1) {
-            throw new RuntimeException("expected count 1, but actual: " + count);
+            throw new UnexpectedCountException(1, count);
         }
         return entity;
     }
