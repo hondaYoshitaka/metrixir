@@ -80,15 +80,11 @@ public class MetricsController {
                 metricsList.stream().collect(groupingBy(Metrics::getTransactionId))
                         .entrySet().stream()
                         .sorted(Entry.comparingByValue((list1, list2) -> {
+                            // pageイベント中の最初に計測を開始した時点を基準に並び替える
                             final LocalDateTime time1 = list1.get(0).getClientEventAt();
                             final LocalDateTime time2 = list2.get(0).getClientEventAt();
-                            if (time1.isEqual(time2)) {
-                                return 0;
-                            } else if (time1.isAfter(time2)) {
-                                return -1;
-                            } else {
-                                return 1;
-                            }
+                            // 降順
+                            return time1.compareTo(time2) * -1;
                         }))
                         .collect(Collectors.toMap(Entry::getKey,
                                 Entry::getValue,
