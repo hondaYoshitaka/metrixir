@@ -207,3 +207,23 @@ $(function () {
         new Chart(detail[0], detail.data('chart'));
     });
 });
+
+$(function () {
+    var pagination = $('.pagination');
+
+    var total = pagination.data('total');
+    var limit = pagination.data('limit');
+    var current = pagination.data('current');
+
+    var maxPage = Math.ceil(total / limit);
+
+    for (var page = 0; page < maxPage; page++) {
+        var li = $('<li/>').addClass('page-item');
+        var a = $('<a/>').addClass('page-link').attr({href: '?page=' + page}).text(page + 1);
+
+        if (page === parseInt(current, 10)) {
+            li.addClass('disabled');
+        }
+        pagination.append(li.append(a));
+    }
+});

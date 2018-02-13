@@ -66,6 +66,14 @@
                 <canvas class="chart-click-counts"></canvas>
             </div>
         </div>
+
+        <nav aria-label="metrics" class="d-flex mt-2">
+            <ul class="pagination mx-auto"
+                th:data-total="${pagination.total}"
+                th:data-current="${pagination.page}"
+                th:data-limit="${pagination.limit}">
+            </ul>
+        </nav>
     </section>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.1/Chart.min.js"

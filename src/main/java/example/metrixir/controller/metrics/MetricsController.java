@@ -7,6 +7,7 @@ import enkan.component.doma2.DomaProvider;
 import enkan.data.Cookie;
 import enkan.data.HttpRequest;
 import enkan.data.HttpResponse;
+import example.metrixir.component.web.pager.Pagination;
 import example.metrixir.dao.client.ClientHostDao;
 import example.metrixir.dao.metrics.MetricsDao;
 import example.metrixir.dao.metrics.VisitorMetricsDao;
@@ -20,6 +21,7 @@ import example.metrixir.model.entity.user.Visitor;
 import example.metrixir.model.form.metrics.HostMetricsFetchForm;
 import example.metrixir.model.form.metrics.MetricsCreateForm;
 import kotowari.component.TemplateEngine;
+import org.seasar.doma.jdbc.SelectOptions;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
@@ -47,6 +49,10 @@ public class MetricsController {
      * 訪問者cookieの生存時間 (sec)
      */
     private static final int VISITOR_COOKIE_MAX_AGE = (int) TimeUnit.DAYS.toSeconds(2);
+    /**
+     * 表示metricの上限数
+     */
+    private static final Integer METRICS_PAGE_LIMIT = 20;
 
     @Inject
     private DomaProvider daoProvider;
@@ -75,7 +81,11 @@ public class MetricsController {
      * @return view
      */
     public HttpResponse index(final HostMetricsFetchForm form) {
-        final List<MetricsWithVisitor> metricsList = metricsDao.findAllByPage(form.getHostId());
+        final Pagination pagination = new Pagination(metricsDao.countByHostId(form.getHostId()),
+                                                     form.getPage(), METRICS_PAGE_LIMIT);
+        final List<MetricsWithVisitor> metricsList = metricsDao.findAllByPage(
+            form.getHostId(), pagination.getLimit(), pagination.getOffset());
+
         final LinkedHashMap<String, List<MetricsWithVisitor>> sortedMetricsMap =
                 metricsList.stream().collect(groupingBy(Metrics::getTransactionId))
                         .entrySet().stream()
@@ -92,8 +102,9 @@ public class MetricsController {
                                 LinkedHashMap::new));
         final Object[] params = {
                 "host", clientHostDao.findById(form.getHostId()),
-                "metricsMap", sortedMetricsMap};
-
+                "metricsMap", sortedMetricsMap,
+                "pagination", pagination
+        };
         return templateEngine.render("metrics/index", params);
     }
 

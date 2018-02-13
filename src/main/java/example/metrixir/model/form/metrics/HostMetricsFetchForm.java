@@ -11,4 +11,7 @@ public class HostMetricsFetchForm extends FormBase {
     private Long hostId;
 
     private String path;
+
+    private int page = 0;
+
 }
