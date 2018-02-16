@@ -43,6 +43,7 @@ public class ApplicationConfiguration implements enkan.config.ApplicationFactory
             r.scope("", view -> {
                 view.get("/").to(IndexController.class, "index");
                 view.get("/hosts/:hostId/metrics").to(MetricsController.class, "index");
+                view.get("/metrics/count").to(MetricsController.class, "showCount");
             });
             r.scope("/api", api -> {
                 api.post("/metrics").to(MetricsController.class, "create");

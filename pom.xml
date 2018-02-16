@@ -21,6 +21,7 @@
 
         <lombok.version>1.16.18</lombok.version>
         <postgres.version>42.2.0</postgres.version>
+        <logback.version>1.2.3</logback.version>
     </properties>
 
     <build>
@@ -125,6 +126,11 @@
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <version>${postgres.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>${logback.version}</version>
         </dependency>
 
         <dependency>

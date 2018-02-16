@@ -2,7 +2,6 @@ package example.metrixir.controller.metrics;
 
 import enkan.Env;
 import enkan.collection.Multimap;
-import enkan.collection.Parameters;
 import enkan.component.doma2.DomaProvider;
 import enkan.data.Cookie;
 import enkan.data.HttpRequest;
@@ -21,7 +20,6 @@ import example.metrixir.model.entity.user.Visitor;
 import example.metrixir.model.form.metrics.HostMetricsFetchForm;
 import example.metrixir.model.form.metrics.MetricsCreateForm;
 import kotowari.component.TemplateEngine;
-import org.seasar.doma.jdbc.SelectOptions;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
@@ -40,6 +38,11 @@ import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.groupingBy;
 
+/**
+ * metricに関するcontrollerクラスです.
+ *
+ * @author y_honda_
+ */
 public class MetricsController {
     /**
      * 訪問者cookie名
@@ -82,9 +85,9 @@ public class MetricsController {
      */
     public HttpResponse index(final HostMetricsFetchForm form) {
         final Pagination pagination = new Pagination(metricsDao.countByHostId(form.getHostId()),
-                                                     form.getPage(), METRICS_PAGE_LIMIT);
+                form.getPage(), METRICS_PAGE_LIMIT);
         final List<MetricsWithVisitor> metricsList = metricsDao.findAllByPage(
-            form.getHostId(), pagination.getLimit(), pagination.getOffset());
+                form.getHostId(), pagination.getLimit(), pagination.getOffset());
 
         final LinkedHashMap<String, List<MetricsWithVisitor>> sortedMetricsMap =
                 metricsList.stream().collect(groupingBy(Metrics::getTransactionId))
@@ -108,6 +111,20 @@ public class MetricsController {
         return templateEngine.render("metrics/index", params);
     }
 
+    public HttpResponse showCount() {
+        final Object[] params = {
+                "metricsCount", metricsDao.countAll()
+        };
+        return templateEngine.render("metrics/showCount", params);
+    }
+
+    /**
+     * metricを登録します.
+     *
+     * @param request リクエスト
+     * @param form    apiフォーム
+     * @return response
+     */
     @Transactional
     public HttpResponse create(final HttpRequest request, final MetricsCreateForm form) {
         final Cookie cookie = Optional.ofNullable(request.getCookies().get(VISITOR_COOKIE_NAME))

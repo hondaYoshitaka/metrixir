@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/layout}">
+<head>
+    <style>
+        table {
+            background: #7d7d7d;
+            color: white;
+        }
+
+        th, td {
+            border: 1px solid #5a5a5a;
+            padding: .1rem .5rem;
+        }
+
+        td.result {
+            background: #5a5a5a;
+        }
+    </style>
+    <title>Metrics Count</title>
+</head>
+
+<body>
+<div layout:fragment="content">
+    <section>
+        <div class="row">
+            <div class="col-12">
+                <table>
+                    <thead>
+                    <tr>
+                        <th style="width: 30px;"></th>
+                        <th style="width: 100px;">count</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td class="result">
+                            <span th:text="${metricsCount}">0</span>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+</div>
+</body>
+</html>
