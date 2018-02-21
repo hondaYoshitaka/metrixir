@@ -217,13 +217,31 @@ $(function () {
 
     var maxPage = Math.ceil(total / limit);
 
-    for (var page = 0; page < maxPage; page++) {
+    var range = 3;
+
+    var createPaginationItem = function (page, current) {
         var li = $('<li/>').addClass('page-item');
         var a = $('<a/>').addClass('page-link').attr({href: '?page=' + page}).text(page + 1);
 
         if (page === parseInt(current, 10)) {
             li.addClass('disabled');
         }
-        pagination.append(li.append(a));
+        return li.append(a);
+    };
+
+    if ((current - range) >= 0) {
+        var first = createPaginationItem(0, current);
+        // TODO ...
+        pagination.append(first);
+    }
+    for (var page = 0; page < maxPage; page++) {
+        var li = createPaginationItem(page, current);
+
+        pagination.append(li);
+    }
+    if ((current - range) <= maxPage) {
+        var last = createPaginationItem(maxPage, current);
+        // TODO ...
+        pagination.append(last);
     }
 });
