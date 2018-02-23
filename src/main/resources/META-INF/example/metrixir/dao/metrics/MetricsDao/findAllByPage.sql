@@ -33,4 +33,5 @@ INNER JOIN (
   ) temp
   ON m.transaction_id = temp.transaction_id
 
+ORDER BY m.client_event_at ASC
 ;
