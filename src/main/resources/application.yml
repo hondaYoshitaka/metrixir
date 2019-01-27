@@ -1,0 +1,11 @@
+spring:
+  profiles:
+    active: local
+  datasource:
+    hikari:
+      driver-class-name: org.postgresql.Driver
+
+doma:
+  dialect:        postgres
+  naming:         snake_upper_case
+  query-timeout:  3000

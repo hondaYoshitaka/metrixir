@@ -1,0 +1,5 @@
+spring:
+  datasource:
+    url:      jdbc:postgresql://localhost/metrixir
+    username: dba
+    password: p@ssw0rd
